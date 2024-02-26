@@ -124,7 +124,10 @@ class SystemTrayApp:
             self.send_ctrl_c(hwnd)
             try:
                 selected_text = pyperclip.paste()
-                print(f"Selected text from the active window: {selected_text}")
+                print("+++++++++++++++++++++++++++++++++")
+                print(selected_text)
+                print("+++++++++++++++++++++++++++++++++")
+                # print(f"Selected text from the active window: {selected_text}")
             except Exception as e:
                 print(f"Failed to retrieve selected text: {e}")
         else:
