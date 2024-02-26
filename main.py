@@ -73,7 +73,6 @@ class SystemTrayApp:
         sys.exit(self.app.exec_())
 
     # Function to send a key press event to the window
-
     # Function to send Ctrl+C to the window
 
     def send_ctrl_c(self, hwnd):
@@ -129,6 +128,7 @@ class SystemTrayApp:
             self.send_ctrl_c(hwnd)
             try:
                 selected_text = pyperclip.paste()
+                pyperclip.copy("")
                 return selected_text                
             except Exception as e:
                 print(f"Failed to retrieve selected text: {e}")
