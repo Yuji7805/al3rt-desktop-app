@@ -1,9 +1,6 @@
-from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit
 
-from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QShortcut
-
+import pyperclip
 from setting import SettingWindow
 
 
@@ -28,13 +25,14 @@ class ChatWindow(QWidget):
 
         vlayout.addLayout(hlayout)
 
-        self.prompt_input = QLineEdit(self)
+        self.prompt_input = QTextEdit(self)
         vlayout.addWidget(self.prompt_input)
 
         self.send_request_button = QPushButton("Send Request", self)
         vlayout.addWidget(self.send_request_button)
 
         self.answer_section = QTextEdit(self)
+        self.answer_section.setReadOnly(True)
         vlayout.addWidget(self.answer_section)
 
         # Set Layout and Window Title
@@ -51,11 +49,15 @@ class ChatWindow(QWidget):
         # TODO: Call your backend API or logic here
 
     def show_settings(self):
-        self.setting_window.show() 
+        self.setting_window.show()            
 
-    def closeEvent(self, event):
+    def closeEvent(self, event):        
         self.hide()
         event.ignore()
+        
+    def set_prompt_text(self, text):
+        self.prompt_input.setText(text)
+        self.prompt_input.selectAll()
 
 
 if __name__ == "__main__":

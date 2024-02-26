@@ -20,7 +20,7 @@ class SystemTrayApp:
         self.app = app
 
         # Register global hotkey
-        keyboard.add_hotkey('ctrl+shift+alt+x', self.show_chat)
+        keyboard.add_hotkey('ctrl+alt+x', self.show_chat)
 
         # Create instances of the windows but don't show them yet
         self.chat_window = ChatWindow()
@@ -55,7 +55,8 @@ class SystemTrayApp:
 
     def show_chat(self):
         print("clilcked......")
-        self.copy_selected_text()
+        text_to_send = self.copy_selected_text()
+        self.chat_window.set_prompt_text(text_to_send)
         # Make sure the chat window is shown even if it was closed or hidden
         if self.chat_window.isHidden():
             self.chat_window.show()
@@ -77,20 +78,23 @@ class SystemTrayApp:
 
     def send_ctrl_c(self, hwnd):
         try:
+            import time
             # Bring the window to the foreground
             win32gui.SetForegroundWindow(hwnd)
-
+            time.sleep(0.1)  # Add a small delay to allow the window to come to the foreground
+            
             # Press down the 'Ctrl' key
             win32api.keybd_event(win32con.VK_CONTROL, 0, 0, 0)
 
             # Press and release the 'C' key
             win32api.keybd_event(0x43, 0, 0, 0)              # Down 'C'
+            time.sleep(0.05)  # Add a slight delay between pressing and releasing the key
             win32api.keybd_event(
                 0x43, 0, win32con.KEYEVENTF_KEYUP, 0)  # Up 'C'
 
             # Release the 'Ctrl' key
             win32api.keybd_event(win32con.VK_CONTROL, 0,
-                                 win32con.KEYEVENTF_KEYUP, 0)
+                                    win32con.KEYEVENTF_KEYUP, 0)
 
             print(f"Sent Ctrl+C to HWND: {hwnd}")
         except Exception as e:
@@ -121,17 +125,17 @@ class SystemTrayApp:
             window_title = focused_window.title
 
             hwnd = self.find_window_by_title(window_title=window_title)
+            
             self.send_ctrl_c(hwnd)
             try:
                 selected_text = pyperclip.paste()
-                print("+++++++++++++++++++++++++++++++++")
-                print(selected_text)
-                print("+++++++++++++++++++++++++++++++++")
-                # print(f"Selected text from the active window: {selected_text}")
+                return selected_text                
             except Exception as e:
                 print(f"Failed to retrieve selected text: {e}")
+                return
         else:
             print("No active window detected")
+            return 
 
 
 class TrayApplication(QApplication):
