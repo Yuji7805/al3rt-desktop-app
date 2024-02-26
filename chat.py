@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit, QLineEdit
 
 import pyperclip
 from setting import SettingWindow
@@ -25,7 +25,7 @@ class ChatWindow(QWidget):
 
         vlayout.addLayout(hlayout)
 
-        self.prompt_input = QTextEdit(self)
+        self.prompt_input = QLineEdit(self)
         vlayout.addWidget(self.prompt_input)
 
         self.send_request_button = QPushButton("Send Request", self)
