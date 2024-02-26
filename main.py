@@ -118,10 +118,10 @@ class SystemTrayApp:
         print("====== end ======")
         if focused_window:
             print(type(focused_window.title))
-            # window_title = focused_window.title
+            window_title = focused_window.title
 
-            # hwnd = self.find_window_by_title(window_title=window_title)
-            # self.send_ctrl_c(hwnd)
+            hwnd = self.find_window_by_title(window_title=window_title)
+            self.send_ctrl_c(hwnd)
             try:
                 selected_text = pyperclip.paste()
                 print(f"Selected text from the active window: {selected_text}")
