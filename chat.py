@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit, QLineEdit
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit, QLineEdit, QPlainTextEdit
 
 import pyperclip
 from setting import SettingWindow
@@ -8,8 +8,7 @@ class ChatWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setting_window = SettingWindow()
-
-        # Initialize UI
+        
         self.initUI()
 
     def initUI(self):
@@ -25,7 +24,7 @@ class ChatWindow(QWidget):
 
         vlayout.addLayout(hlayout)
 
-        self.prompt_input = QLineEdit(self)
+        self.prompt_input = QPlainTextEdit(self)
         vlayout.addWidget(self.prompt_input)
 
         self.send_request_button = QPushButton("Send Request", self)
@@ -42,11 +41,9 @@ class ChatWindow(QWidget):
         # Connect Button Clicks
         self.send_request_button.clicked.connect(self.send_request)
 
-    def send_request(self):
-        # Here you will call your logic for sending a request and updating the answer section
+    def send_request(self):        
         input_text = self.prompt_input.text()
-        self.answer_section.append(f"Request Sent: {input_text}")
-        # TODO: Call your backend API or logic here
+        self.answer_section.append(f"Request Sent: {input_text}")        
 
     def show_settings(self):
         self.setting_window.show()            
@@ -56,8 +53,7 @@ class ChatWindow(QWidget):
         event.ignore()
         
     def set_prompt_text(self, text):
-        self.prompt_input.setText(text)
-        self.prompt_input.selectAll()
+        self.prompt_input.setPlainText(text)        
 
 
 if __name__ == "__main__":
