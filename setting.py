@@ -3,12 +3,24 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
 from PyQt5.QtCore import QSettings, pyqtSignal
 
 import json
+import requests
 
 # Define QSettings with your organization and application name
 ORGANIZATION_NAME = 'MyOrganization'
 APPLICATION_NAME = 'MyAppSettings'
 
 settings = QSettings(ORGANIZATION_NAME, APPLICATION_NAME)
+
+
+def fetch_data_from_url(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # This will raise an exception for HTTP errors
+        return response.json()  # Assuming the response is JSON-formatted
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")  # Handle HTTP errors
+    except Exception as err:
+        print(f"An error occurred: {err}")  # Handle other possible errors
 
 
 def store_prompts_table(prompt_dict):
@@ -43,6 +55,11 @@ def store_streams_table(stream_dict):
 def get_streams_table():
     # Retrieve the JSON string from settings
     # Provide a default value of '{}'
+    assistants = fetch_data_from_url(
+        "https://main-monster-decent.ngrok-free.app/openai/assistants")
+    for assistant in assistants["data"]:
+        print("name: ", assistant["name"], " ", assistant["instructions"])
+    exit()
     streams_json = settings.value('streams_table', '{}')
     try:
         stream_dict = json.loads(streams_json)
@@ -64,6 +81,7 @@ class SettingWindow(QWidget):
         # Initialize UI
         self.initUI()
         self.load_prompts()
+        self.load_streams()
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -271,7 +289,7 @@ class SettingWindow(QWidget):
             self.update_table_with_streams()
 
     def closeEvent(self, event):
-        self.prompts_updated.emit()        
+        self.prompts_updated.emit()
         self.hide()
         event.ignore()
 
