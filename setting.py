@@ -63,7 +63,8 @@ def get_streams_table():
     streams_json = {}
     global assistants
     assistants = fetch_data_from_url(
-        ''.join([BACKEND_BASE, "assistants"]))
+        ''.join([BACKEND_BASE, "assistants"]))    
+    
     for assistant in assistants["data"]:
         streams_json[assistant["name"]] = assistant['instructions']
     streams_json = json.dumps(streams_json)
@@ -247,11 +248,12 @@ class SettingWindow(QWidget):
                             "assist-name": stream_name,
                             "assist-type": "code_interpreter",
                         }
+                        print(_data_To_Modify_Assistant)                        
                         headers = {
                             "content-type": "application/json"
                         }
                         response = requests.post(''.join(
-                            [BACKEND_BASE, "assistants/modify"]), headers=headers, data=_data_To_Modify_Assistant)
+                            [BACKEND_BASE, "assistants/modify"]), headers=headers, data=json.dumps(_data_To_Modify_Assistant))
                         if response.ok:
                             print('Success: Modified')
                             self._streams_data[stream_name] = instruction_text
@@ -271,7 +273,7 @@ class SettingWindow(QWidget):
                     "assist-name": stream_name,
                     "assist-type": "code_interpreter",
                 }
-                
+
                 headers = {
                     "content-type": "application/json"
                 }
@@ -290,6 +292,8 @@ class SettingWindow(QWidget):
                 else:
                     # If response was unsuccessful, raise an exception
                     response.raise_for_status()
+
+            get_streams_table()
         else:
             QMessageBox.warning(
                 self, 'Error', 'Both Stream and Instruction are required.')
