@@ -32,13 +32,35 @@ def get_prompts_table():
         return {}
 
 
+def store_streams_table(stream_dict):
+    # Convert the dictionary to a JSON string for storage
+    streams_json = json.dumps(stream_dict)
+    # Store the JSON string in settings
+    settings.setValue('streams_table', streams_json)
+    settings.sync()  # Ensure data is written to persistent storage
+
+
+def get_streams_table():
+    # Retrieve the JSON string from settings
+    # Provide a default value of '{}'
+    streams_json = settings.value('streams_table', '{}')
+    try:
+        stream_dict = json.loads(streams_json)
+        return stream_dict
+    except json.JSONDecodeError:
+        # Handle case where JSON is not decodable, return empty dict
+        return {}
+
+
 class SettingWindow(QWidget):
     prompts_updated = pyqtSignal()  # Define the signal
 
     def __init__(self):
         super().__init__()
         self._prompts_data = {}  # Temporary in-memory storage for prompts
+        self._streams_data = {}
         self.currently_editing_prompt = None
+        self.currently_editing_stream = None
         # Initialize UI
         self.initUI()
         self.load_prompts()
@@ -179,12 +201,77 @@ class SettingWindow(QWidget):
             store_prompts_table(self._prompts_data)
             self.update_table_with_prompts()
 
+    def load_streams(self):
+        self._streams_data = get_streams_table()
+        self.update_table_with_streams()
+
     def add_stream(self):
-        # Todo: Implement adding of stream and instruction to the table and backend storage
-        print("Add Stream Clicked")
+        stream_name = self.stream_input.text()
+        instruction_text = self.instruction_input.text()
+        if stream_name and instruction_text:
+            self._streams_data[stream_name] = instruction_text
+            store_streams_table(self._streams_data)  # Store updated data
+            self.update_table_with_streams()
+            self.stream_input.clear()
+            self.instruction_input.clear()
+        else:
+            QMessageBox.warning(
+                self, 'Error', 'Both Stream and Instruction are required.')
+
+    def update_table_with_streams(self):
+        self.stream_table.setRowCount(0)  # Clear the table
+        for stream_name, description in self._streams_data.items():
+            row_position = self.stream_table.rowCount()
+            self.stream_table.insertRow(row_position)
+            self.stream_table.setItem(
+                row_position, 0, QTableWidgetItem(stream_name))
+            self.stream_table.setItem(
+                row_position, 1, QTableWidgetItem(description))
+
+            # Create widget layout for Edit/Delete buttons
+            widget = QWidget()
+            btn_layout = QHBoxLayout()
+            # Optional: Remove margins if preferred
+            btn_layout.setContentsMargins(0, 0, 0, 0)
+            btn_layout.setSpacing(2)  # Optional: Set spacing between buttons
+
+            edit_button = QPushButton('Edit')
+            delete_button = QPushButton('Delete')
+
+            edit_button.clicked.connect(
+                lambda _, s=stream_name: self.edit_stream(s))
+            delete_button.clicked.connect(
+                lambda _, s=stream_name: self.delete_stream(s))
+
+            btn_layout.addWidget(edit_button)
+            btn_layout.addWidget(delete_button)
+
+            widget.setLayout(btn_layout)
+
+            self.stream_table.setCellWidget(row_position, 2, widget)
+
+    def edit_stream(self, stream_name):
+        instruction = self._streams_data.get(stream_name)
+        if instruction is not None:
+            # Populate the input fields with the existing data for editing
+            self.stream_input.setText(stream_name)
+            self.instruction_input.setText(instruction)
+            # Set the currently editing stream so we can remove it later if needed
+            self.currently_editing_stream = stream_name
+
+    def get_streams_list(self):
+        return [stream_name for stream_name, instruction in self._streams_data.items()]
+
+    def delete_stream(self, stream_name):
+        if stream_name in self._streams_data:
+            del self._streams_data[stream_name]
+            # Update the persistent storage
+            store_streams_table()
+            # Refresh the UI
+            self.update_table_with_streams()
 
     def closeEvent(self, event):
-        self.prompts_updated.emit()
+        self.prompts_updated.emit()        
         self.hide()
         event.ignore()
 
