@@ -166,6 +166,9 @@ class SettingWindow(QWidget):
             # Set the currently editing prompt so we can remove it later if needed
             self.currently_editing_prompt = prompt
 
+    def get_prompts_list(self):                
+        return [prompt for prompt, description in self._prompts_data.items()]
+    
     def delete_prompt(self, prompt):
         if prompt in self._prompts_data:
             del self._prompts_data[prompt]

@@ -7,14 +7,15 @@ class ChatWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setting_window = SettingWindow()
-        
+
         self.initUI()
+        self.load_prompts()
 
     def initUI(self):
         vlayout = QVBoxLayout()
-        hselectlayout = QHBoxLayout()        
+        hselectlayout = QHBoxLayout()
 
-        self.stream_combo = QComboBox()        
+        self.stream_combo = QComboBox()
         hselectlayout.addWidget(self.stream_combo)
 
         self.prompt_select_combo = QComboBox()
@@ -22,9 +23,9 @@ class ChatWindow(QWidget):
 
         self.setting_button = QPushButton("Setting")
         self.setting_button.setFixedWidth(22)
-        self.setting_button.clicked.connect(self.show_settings)        
+        self.setting_button.clicked.connect(self.show_settings)
         hselectlayout.addWidget(self.setting_button)
-        
+
         vlayout.addLayout(hselectlayout)
 
         self.prompt_input = QPlainTextEdit(self)
@@ -44,19 +45,33 @@ class ChatWindow(QWidget):
 
         self.send_request_button.clicked.connect(self.send_request)
 
+    def load_prompts(self):
+        # Retrieve prompts list from the settings window
+        prompts_list = self.setting_window.get_prompts_list()
+
+        # Clear any existing items in the combo box
+        self.prompt_select_combo.clear()
+
+        # Add the retrieved prompts to the combo box
+        for prompt in prompts_list:
+            self.prompt_select_combo.addItem(prompt)
+
     def send_request(self):
-        input_text = self.prompt_input.text()
-        self.answer_section.append(f"Request Sent: {input_text}")        
+        # Use currentText() instead of text(), as QComboBox does not have text() method
+        input_text = self.prompt_input.toPlainText()
+        selected_prompt = self.prompt_select_combo.currentText()
+        complete_text = f"{selected_prompt}: {input_text}"
+        self.answer_section.append(f"Request Sent: {complete_text}")
 
     def show_settings(self):
-        self.setting_window.show()            
+        self.setting_window.show()
 
-    def closeEvent(self, event):        
+    def closeEvent(self, event):
         self.hide()
         event.ignore()
-        
+
     def set_prompt_text(self, text):
-        self.prompt_input.setPlainText(text)        
+        self.prompt_input.setPlainText(text)
 
 
 if __name__ == "__main__":
