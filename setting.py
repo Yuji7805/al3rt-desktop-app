@@ -122,6 +122,9 @@ class SettingWindow(QWidget):
         self.stream_table.setColumnCount(3)
         self.stream_table.setHorizontalHeaderLabels(
             ["Stream", "Instruction", "Actions"])
+        self.stream_table.horizontalHeader().setStretchLastSection(True)
+        self.stream_table.setColumnWidth(0, 150)
+        self.stream_table.setColumnWidth(1, 180)
         self.stream_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.stream_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         layout.addWidget(self.stream_table)
@@ -144,8 +147,13 @@ class SettingWindow(QWidget):
         layout.addLayout(prompt_layout)
 
         self.prompt_table = QTableWidget(0, 3)
+
         self.prompt_table.setHorizontalHeaderLabels(
-            ["Prompt", "Description", "Actions"])
+            ["Prompt", "Description", "Actions"])        
+        self.prompt_table.horizontalHeader().setStretchLastSection(True)        
+        self.prompt_table.setColumnWidth(0, 150)
+        self.prompt_table.setColumnWidth(1, 180)        
+
         self.prompt_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.prompt_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         layout.addWidget(self.prompt_table)
@@ -157,6 +165,84 @@ class SettingWindow(QWidget):
         # Connect Button Clicks
         self.add_stream_btn.clicked.connect(self.add_stream)
         self.add_prompt_btn.clicked.connect(self.add_prompt)
+
+        stylesheet = """
+            QWidget {
+                background-color: #333;
+                color: #ffffff;
+                font-size: 11px;
+            }
+            QPlainTextEdit, QTextEdit {
+                background-color: #2c2f33;
+                border: 1px solid #3082ce;
+                color: #ffffff;
+                padding: 5px;
+            }
+            QPushButton {
+                color: white;            
+            }
+            QPushButton:hover {
+                background-color: lighter;
+            }
+            QPushButton:focus {
+                outline: none;                
+            }
+            QComboBox {
+                background-color: #2c2f33;
+                border: 1px solid #3082ce;
+                color: #ffffff;
+                border-radius: 3px;
+                padding: 1px 18px 1px 3px;
+            }
+            QComboBox::drop-down {
+                subcontrol-position: center right;
+                subcontrol-origin: padding;
+                width: 15px;
+                border-left-width: 1px;
+                border-left-color: #3082ce;
+                border-top-right-radius: 3px;
+                border-bottom-right-radius: 3px;
+            }
+            QLabel {
+                margin: 5px;
+                color: #cbd5e0;
+            }
+            QHBoxLayout {
+                spacing: 10px;
+            }
+            QTableWidget {                
+                background-color: #2c2f33; /* Slightly lighter than main widget bg */
+                border: 1px solid #3082ce; /* Border color to match the primary color */
+                gridline-color: #333; /* Grid line color to match the dark background */
+            }
+
+            QTableWidget::item {
+                color: #ffffff; /* Font color */
+                border-bottom: 1px solid #333; /* Bottom border color for items */
+                padding: 5px; /* Padding inside cells */
+            }
+
+            QTableWidget::item:selected {
+                background-color: #3082ce; /* Background color for selected item */
+                color: white; /* Font color for selected item */
+            }
+
+            QHeaderView::section {
+                background-color: #333; /* Background color for headers */
+                color: #ffffff; /* Font color for headers */
+                padding: 5px; /* Padding inside header cells */
+                border-top: 0px; /* No top border for headers */
+                border-bottom: 1px solid #3082ce; /* Border color to match the primary color */
+                border-right: 1px solid #333; /* Right border color to match the dark background */
+            }
+
+            /* Header at the bottom if it exists */
+            QTableWidget QTableCornerButton::section {
+                background-color: #333; /* Background color for corner section */
+                border: 0px;
+            }
+        """
+        self.setStyleSheet(stylesheet)
 
     def load_prompts(self):
         # Load prompts from persistent storage
@@ -196,7 +282,11 @@ class SettingWindow(QWidget):
             btn_layout.setSpacing(2)  # Optional: Set spacing between buttons
 
             edit_button = QPushButton('Edit')
+            edit_button.setFixedWidth(30)
+
             delete_button = QPushButton('Delete')
+            delete_button.setFixedWidth(40)
+            delete_button.setStyleSheet('background-color:"#e01111"')
 
             edit_button.clicked.connect(
                 lambda _, p=prompt: self.edit_prompt(p))
@@ -320,7 +410,11 @@ class SettingWindow(QWidget):
             btn_layout.setSpacing(2)  # Optional: Set spacing between buttons
 
             edit_button = QPushButton('Edit')
+            edit_button.setFixedWidth(30)
             delete_button = QPushButton('Delete')
+            delete_button.setFixedWidth(40)
+            delete_button.setStyleSheet('background-color:"#e01111"')
+
 
             edit_button.clicked.connect(
                 lambda _, s=stream_name: self.edit_stream(s))
