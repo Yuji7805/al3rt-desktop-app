@@ -384,6 +384,11 @@ class SettingWindow(QWidget):
                 except requests.exceptions.RequestException as e:
                     print(e)
 
+    def get_assistant_id(self, stream_name):
+        for assistant in assistants["data"]:
+            if assistant["name"] == stream_name:
+                return assistant["id"]
+
     def closeEvent(self, event):
         self.prompts_updated.emit()
         self.streams_updated.emit()

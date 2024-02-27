@@ -2,12 +2,15 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplicat
 from PyQt5.QtGui import QFontDatabase
 from setting import SettingWindow
 import requests
+import json
 from PyQt5.QtCore import QSettings
 
 ORGANIZATION_NAME = 'MyOrganization'
 APPLICATION_NAME = 'MyAppSettings'
 
 settings = QSettings(ORGANIZATION_NAME, APPLICATION_NAME)
+
+BACKEND_BASE = "https://main-monster-decent.ngrok-free.app/openai/"
 
 
 class ChatWindow(QWidget):
@@ -147,7 +150,28 @@ class ChatWindow(QWidget):
         # Use currentText() instead of text(), as QComboBox does not have text() method
         prompt = self.prompt_input.toPlainText()
         stream_name = self.stream_combo.currentText()
-        
+        asstId = self.setting_window.get_assistant_id(stream_name)
+
+        request = {
+            "thdid": self.threadId,
+            "asstid": asstId,
+            "content": prompt,
+        }
+
+        print(request)
+        headers = {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        }
+
+        response = requests.post(''.join([BACKEND_BASE, 'run']),
+                                 headers=headers, data=json.dumps(request))
+        print(response)
+        if response.ok:
+            gptAnswer = response.json()["content"][0]["text"]
+            self.answer_section.setText(gptAnswer)
+        else:
+            response.raise_for_status()
 
     def create_openai_thread(self):
         existingthread = settings.value("thdid")
