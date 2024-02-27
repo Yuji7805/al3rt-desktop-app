@@ -11,6 +11,9 @@ class ChatWindow(QWidget):
         self.initUI()
         self.load_prompts()
 
+        # Connect the signal to the slot
+        self.setting_window.prompts_updated.connect(self.load_prompts)
+
     def initUI(self):
         vlayout = QVBoxLayout()
         hselectlayout = QHBoxLayout()
@@ -45,6 +48,61 @@ class ChatWindow(QWidget):
 
         self.send_request_button.clicked.connect(self.send_request)
 
+        # change theme
+        self.setStyleSheet("""
+    QWidget {
+        background-color: #333; /* Dark background */
+        color: #ffffff; /* acme-color-white */
+    }
+    QPlainTextEdit, QTextEdit {
+        background-color: #2c2f33; /* Slightly lighter than main widget bg */
+        border: 1px solid #3082ce; /* acme-color-primary */
+        color: #ffffff; /* acme-color-white */
+        padding: 5px;
+    }
+    QPushButton {
+        background-color: #3082ce; /* acme-color-primary */
+        color: white; /* acme-color-white */
+        border-style: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+    }
+    QPushButton:hover {
+        background-color: lighter; /* Lighter version of primary color */
+    }
+    QPushButton:pressed {
+        background-color: darker; /* Darker version of primary color */
+    }
+    QPushButton:focus {
+        outline: none;
+        border: 1px solid #4299e14c; /* acme-color-focusoutline */
+    }
+    QComboBox {
+        background-color: #2c2f33; /* Slightly lighter than main widget bg */
+        border: 1px solid #3082ce; /* acme-color-primary */
+        color: #ffffff; /* acme-color-white */
+        border-radius: 3px;
+        padding: 1px 18px 1px 3px;
+    }
+    QComboBox::drop-down {
+        subcontrol-position: center right;
+        subcontrol-origin: padding;
+        width: 15px;
+        border-left-width: 1px;
+        border-left-color: #3082ce; /* acme-color-primary */
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+    }
+    QLabel {
+        margin: 5px;
+        color: #cbd5e0; /* acme-color-gray300 */
+    }
+    QHBoxLayout {
+        spacing: 10px;
+    }
+""")
+
+        
     def load_prompts(self):
         # Retrieve prompts list from the settings window
         prompts_list = self.setting_window.get_prompts_list()

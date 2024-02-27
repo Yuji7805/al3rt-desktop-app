@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
                              QPushButton, QApplication, QHBoxLayout, QLineEdit, QTableWidget, QTableWidgetItem, QMessageBox, QAbstractItemView)
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, pyqtSignal
 
 import json
 
@@ -33,6 +33,8 @@ def get_prompts_table():
 
 
 class SettingWindow(QWidget):
+    prompts_updated = pyqtSignal()  # Define the signal
+
     def __init__(self):
         super().__init__()
         self._prompts_data = {}  # Temporary in-memory storage for prompts
@@ -157,6 +159,7 @@ class SettingWindow(QWidget):
             widget.setLayout(btn_layout)
 
             self.prompt_table.setCellWidget(row_position, 2, widget)
+
     def edit_prompt(self, prompt):
         description = self._prompts_data.get(prompt)
         if description is not None:
@@ -166,9 +169,9 @@ class SettingWindow(QWidget):
             # Set the currently editing prompt so we can remove it later if needed
             self.currently_editing_prompt = prompt
 
-    def get_prompts_list(self):                
+    def get_prompts_list(self):
         return [prompt for prompt, description in self._prompts_data.items()]
-    
+
     def delete_prompt(self, prompt):
         if prompt in self._prompts_data:
             del self._prompts_data[prompt]
@@ -181,6 +184,7 @@ class SettingWindow(QWidget):
         print("Add Stream Clicked")
 
     def closeEvent(self, event):
+        self.prompts_updated.emit()
         self.hide()
         event.ignore()
 
