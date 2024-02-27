@@ -5,11 +5,16 @@ from PyQt5.QtCore import QSettings, pyqtSignal
 import json
 import requests
 
+BACKEND_BASE = "https://main-monster-decent.ngrok-free.app/openai/"
+
+
 # Define QSettings with your organization and application name
 ORGANIZATION_NAME = 'MyOrganization'
 APPLICATION_NAME = 'MyAppSettings'
 
 settings = QSettings(ORGANIZATION_NAME, APPLICATION_NAME)
+
+assistants = []
 
 
 def fetch_data_from_url(url):
@@ -56,13 +61,12 @@ def get_streams_table():
     # Retrieve the JSON string from settings
     # Provide a default value of '{}'
     streams_json = {}
+    global assistants
     assistants = fetch_data_from_url(
-        "https://main-monster-decent.ngrok-free.app/openai/assistants")
+        ''.join([BACKEND_BASE, "assistants"]))
     for assistant in assistants["data"]:
-        streams_json[assistant["name"]] = assistant['instructions']        
-    # streams_json = settings.value('streams_table', '{}')
+        streams_json[assistant["name"]] = assistant['instructions']
     streams_json = json.dumps(streams_json)
-    print(streams_json)
     try:
         stream_dict = json.loads(streams_json)
         return stream_dict
@@ -116,6 +120,8 @@ class SettingWindow(QWidget):
         self.stream_table.setColumnCount(3)
         self.stream_table.setHorizontalHeaderLabels(
             ["Stream", "Instruction", "Actions"])
+        self.stream_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.stream_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         layout.addWidget(self.stream_table)
 
         # Manage Prompts Section
@@ -224,18 +230,66 @@ class SettingWindow(QWidget):
     def load_streams(self):
         self._streams_data = get_streams_table()
         self.update_table_with_streams()
-        print(self.get_streams_list())
-        exit()
 
     def add_stream(self):
         stream_name = self.stream_input.text()
         instruction_text = self.instruction_input.text()
         if stream_name and instruction_text:
-            self._streams_data[stream_name] = instruction_text
-            store_streams_table(self._streams_data)  # Store updated data
-            self.update_table_with_streams()
-            self.stream_input.clear()
-            self.instruction_input.clear()
+            # modify existing assistant
+            if stream_name in self._streams_data:
+                print("need to be modify")
+                for assistant in assistants["data"]:
+                    if assistant["name"] == stream_name:
+                        asstId = assistant["id"]
+                        _data_To_Modify_Assistant = {
+                            "asstid": asstId,
+                            "instruction": instruction_text,
+                            "assist-name": stream_name,
+                            "assist-type": "code_interpreter",
+                        }
+                        headers = {
+                            "content-type": "application/json"
+                        }
+                        response = requests.post(''.join(
+                            [BACKEND_BASE, "assistants/modify"]), headers=headers, data=_data_To_Modify_Assistant)
+                        if response.ok:
+                            print('Success: Modified')
+                            self._streams_data[stream_name] = instruction_text
+                            # Store updated data
+                            store_streams_table(self._streams_data)
+                            self.update_table_with_streams()
+                            self.stream_input.clear()
+                            self.instruction_input.clear()
+                        else:
+                            # If response was unsuccessful, raise an exception
+                            response.raise_for_status()
+
+            # create new assistant
+            else:
+                _data_To_Create_Assistant = {
+                    "instruction": instruction_text,
+                    "assist-name": stream_name,
+                    "assist-type": "code_interpreter",
+                }
+                
+                headers = {
+                    "content-type": "application/json"
+                }
+                response = requests.post(''.join(
+                    [BACKEND_BASE, "assistants/create"]), headers=headers, data=json.dumps(_data_To_Create_Assistant))
+                # Check if the request was successful and print the result
+                if response.ok:
+                    print('Success: Created Assistant')
+                    print(response.text)
+                    self._streams_data[stream_name] = instruction_text
+                    # Store updated data
+                    store_streams_table(self._streams_data)
+                    self.update_table_with_streams()
+                    self.stream_input.clear()
+                    self.instruction_input.clear()
+                else:
+                    # If response was unsuccessful, raise an exception
+                    response.raise_for_status()
         else:
             QMessageBox.warning(
                 self, 'Error', 'Both Stream and Instruction are required.')
@@ -285,12 +339,39 @@ class SettingWindow(QWidget):
         return [stream_name for stream_name, instruction in self._streams_data.items()]
 
     def delete_stream(self, stream_name):
-        if stream_name in self._streams_data:
-            del self._streams_data[stream_name]
-            # Update the persistent storage
-            store_streams_table()
-            # Refresh the UI
-            self.update_table_with_streams()
+        # for assistant in assistants['data']:
+        for assistant in assistants["data"]:
+            if (assistant["name"] == stream_name):
+                asstId = assistant["id"]
+                payload = json.dumps({
+                    "asstid": asstId
+                })
+                headers = {
+                    "content-type": "application/json"
+                }
+                response = requests.delete(
+                    ''.join([BACKEND_BASE, "assistants/delete"]), headers=headers, data=payload)
+                if response.status_code == 200:
+                    data = response.text
+                    print(data)
+                    if data == "deleted":
+                        print("DELETING TABLE")
+                        del self._streams_data[stream_name]
+                        # Update the persistent storage
+                        store_streams_table(self._streams_data)
+                        # Refresh the UI
+                        self.update_table_with_streams()
+                        # table_stream.deleteRow(row.rowIndex) # This part refers to frontend operation which cannot be directly translated to Python
+                    else:
+                        print("Not found: ", asstId)
+                else:
+                    print(f"Error: {response.status_code}, {response.text}")
+
+                # Handling exceptions from the requests library
+                try:
+                    response.raise_for_status()
+                except requests.exceptions.RequestException as e:
+                    print(e)
 
     def closeEvent(self, event):
         self.prompts_updated.emit()
