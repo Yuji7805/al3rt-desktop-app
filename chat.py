@@ -1,6 +1,13 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit, QComboBox, QPlainTextEdit
 from PyQt5.QtGui import QFontDatabase
 from setting import SettingWindow
+import requests
+from PyQt5.QtCore import QSettings
+
+ORGANIZATION_NAME = 'MyOrganization'
+APPLICATION_NAME = 'MyAppSettings'
+
+settings = QSettings(ORGANIZATION_NAME, APPLICATION_NAME)
 
 
 class ChatWindow(QWidget):
@@ -12,10 +19,14 @@ class ChatWindow(QWidget):
         self.load_prompts()
         self.load_streams()
 
+        self.create_openai_thread()
+
         # Connect the signal to the slot
         self.setting_window.prompts_updated.connect(self.load_prompts)
 
     def initUI(self):
+        self.previous_input = ''
+
         vlayout = QVBoxLayout()
         hselectlayout = QHBoxLayout()
 
@@ -23,6 +34,8 @@ class ChatWindow(QWidget):
         hselectlayout.addWidget(self.stream_combo)
 
         self.prompt_select_combo = QComboBox()
+        self.prompt_select_combo.currentIndexChanged.connect(
+            self.update_prompt_input)
         hselectlayout.addWidget(self.prompt_select_combo)
 
         self.setting_button = QPushButton("Setting")
@@ -120,12 +133,46 @@ class ChatWindow(QWidget):
         for stream in self.streams_list:
             self.stream_combo.addItem(stream)
 
+    def update_prompt_input(self):
+        # Get the currently selected prompt
+        selected_prompt = self.prompt_select_combo.currentText()
+        if selected_prompt:
+            prompts_object = self.setting_window.get_prompts_object()
+            prompt_description = prompts_object[selected_prompt]
+            # Update the prompt input with the selected prompt and the current input text
+            complete_text = f"{prompt_description}: {self.previous_input}"
+            self.prompt_input.setPlainText(complete_text)
+
     def send_request(self):
         # Use currentText() instead of text(), as QComboBox does not have text() method
-        input_text = self.prompt_input.toPlainText()
-        selected_prompt = self.prompt_select_combo.currentText()
-        complete_text = f"{selected_prompt}: {input_text}"
-        self.answer_section.append(f"Request Sent: {complete_text}")
+        prompt = self.prompt_input.toPlainText()
+        stream_name = self.stream_combo.currentText()
+        
+
+    def create_openai_thread(self):
+        existingthread = settings.value("thdid")
+        print("use existing thread: ", existingthread)
+        if not str(existingthread).startswith("thread_"):
+            try:
+                url = "https://main-monster-decent.ngrok-free.app/openai/threads/create"
+                # Assuming JSON content type
+                headers = {'Content-Type': 'application/json'}
+
+                response = requests.post(url, headers=headers)
+                response.raise_for_status()  # Raise an error for bad status codes
+
+                data = response.json()
+                thdId = data["thdid"]
+                self.threadId = thdId
+                print("thread created: ", thdId)
+
+                settings.setValue("thdid", thdId)
+                settings.sync()
+
+            except requests.RequestException as error:
+                print(error)
+        else:
+            self.threadId = existingthread
 
     def show_settings(self):
         self.setting_window.show()
@@ -135,6 +182,7 @@ class ChatWindow(QWidget):
         event.ignore()
 
     def set_prompt_text(self, text):
+        self.previous_input = text
         self.prompt_input.setPlainText(text)
 
 

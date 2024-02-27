@@ -222,6 +222,9 @@ class SettingWindow(QWidget):
     def get_prompts_list(self):
         return [prompt for prompt, description in self._prompts_data.items()]
 
+    def get_prompts_object(self):
+        return self._prompts_data
+
     def delete_prompt(self, prompt):
         if prompt in self._prompts_data:
             del self._prompts_data[prompt]
@@ -342,6 +345,9 @@ class SettingWindow(QWidget):
 
     def get_streams_list(self):
         return [stream_name for stream_name, instruction in self._streams_data.items()]
+
+    def get_streams_object(self):
+        return json.dumps(self._streams_data)
 
     def delete_stream(self, stream_name):
         # for assistant in assistants['data']:
