@@ -55,12 +55,14 @@ def store_streams_table(stream_dict):
 def get_streams_table():
     # Retrieve the JSON string from settings
     # Provide a default value of '{}'
+    streams_json = {}
     assistants = fetch_data_from_url(
         "https://main-monster-decent.ngrok-free.app/openai/assistants")
     for assistant in assistants["data"]:
-        print("name: ", assistant["name"], " ", assistant["instructions"])
-    exit()
-    streams_json = settings.value('streams_table', '{}')
+        streams_json[assistant["name"]] = assistant['instructions']        
+    # streams_json = settings.value('streams_table', '{}')
+    streams_json = json.dumps(streams_json)
+    print(streams_json)
     try:
         stream_dict = json.loads(streams_json)
         return stream_dict
@@ -222,6 +224,8 @@ class SettingWindow(QWidget):
     def load_streams(self):
         self._streams_data = get_streams_table()
         self.update_table_with_streams()
+        print(self.get_streams_list())
+        exit()
 
     def add_stream(self):
         stream_name = self.stream_input.text()
