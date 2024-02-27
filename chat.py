@@ -102,7 +102,6 @@ class ChatWindow(QWidget):
     }
 """)
 
-        
     def load_prompts(self):
         # Retrieve prompts list from the settings window
         prompts_list = self.setting_window.get_prompts_list()
@@ -113,6 +112,12 @@ class ChatWindow(QWidget):
         # Add the retrieved prompts to the combo box
         for prompt in prompts_list:
             self.prompt_select_combo.addItem(prompt)
+
+    def load_streams(self):
+        streams_list = self.setting_window.get_streams_list()
+        self.stream_combo.clear()
+        for stream in streams_list:
+            self.stream_combo.addItem(stream)
 
     def send_request(self):
         # Use currentText() instead of text(), as QComboBox does not have text() method
