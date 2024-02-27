@@ -98,7 +98,7 @@ class SettingWindow(QWidget):
         layout.addWidget(self.model_selection_label)
 
         self.model_selection_combo = QComboBox(self)
-        self.model_selection_combo.addItems(['Model 1', 'Model 2'])
+        self.model_selection_combo.addItems(['GPT4'])
         layout.addWidget(self.model_selection_combo)
 
         # Manage Streams Section
