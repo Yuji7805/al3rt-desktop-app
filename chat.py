@@ -34,9 +34,11 @@ class ChatWindow(QWidget):
         hselectlayout = QHBoxLayout()
 
         self.stream_combo = QComboBox()
+        self.stream_combo.setFixedHeight(24)
         hselectlayout.addWidget(self.stream_combo)
 
         self.prompt_select_combo = QComboBox()
+        self.prompt_select_combo.setFixedHeight(24)
         self.prompt_select_combo.currentIndexChanged.connect(
             self.update_prompt_input)
         hselectlayout.addWidget(self.prompt_select_combo)
@@ -85,9 +87,9 @@ class ChatWindow(QWidget):
                 padding: 5px 10px;
                 border-radius: 4px;
             }
-            # QPushButton:hover {
-            #     background-color: lighter; /* Lighter version of primary color */
-            # }
+            QPushButton:hover {
+                background-color: lighter; /* Lighter version of primary color */
+            }
             # QPushButton:pressed {
             #     background-color: darker; /* Darker version of primary color */
             # }
@@ -152,27 +154,29 @@ class ChatWindow(QWidget):
         prompt = self.prompt_input.toPlainText()
         stream_name = self.stream_combo.currentText()
         asstId = self.setting_window.get_assistant_id(stream_name)
+        if prompt.__len__() > 0:
+            request = {
+                "thdid": self.threadId,
+                "asstid": asstId,
+                "content": prompt,
+            }
 
-        request = {
-            "thdid": self.threadId,
-            "asstid": asstId,
-            "content": prompt,
-        }
+            print(request)
+            headers = {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            }
 
-        print(request)
-        headers = {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-        }
-
-        response = requests.post(''.join([BACKEND_BASE, 'run']),
-                                 headers=headers, data=json.dumps(request))
-        print(response)
-        if response.ok:
-            gptAnswer = response.json()["content"][0]["text"]
-            self.answer_section.setText(gptAnswer)
-        else:
-            response.raise_for_status()
+            response = requests.post(''.join([BACKEND_BASE, 'run']),
+                                     headers=headers, data=json.dumps(request))
+            print(response)
+            if response.ok:
+                gptAnswer = response.json()["content"][0]["text"]
+                self.answer_section.setText(gptAnswer)
+            else:
+                response.raise_for_status()
+                self.answer_section.setText(
+                    "Error: ", response.raise_for_status())
 
     def create_openai_thread(self):
         existingthread = settings.value("thdid")
