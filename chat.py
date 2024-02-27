@@ -1,6 +1,5 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit, QLineEdit, QPlainTextEdit
-
-import pyperclip
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit, QComboBox, QPlainTextEdit
+from PyQt5.QtGui import QFontDatabase
 from setting import SettingWindow
 
 
@@ -13,16 +12,20 @@ class ChatWindow(QWidget):
 
     def initUI(self):
         vlayout = QVBoxLayout()
-        hlayout = QHBoxLayout()
+        hselectlayout = QHBoxLayout()        
 
-        self.prompt_label = QLabel("Prompt Input")
-        hlayout.addWidget(self.prompt_label)
+        self.stream_combo = QComboBox()        
+        hselectlayout.addWidget(self.stream_combo)
+
+        self.prompt_select_combo = QComboBox()
+        hselectlayout.addWidget(self.prompt_select_combo)
 
         self.setting_button = QPushButton("Setting")
-        self.setting_button.clicked.connect(self.show_settings)
-        hlayout.addWidget(self.setting_button)
-
-        vlayout.addLayout(hlayout)
+        self.setting_button.setFixedWidth(22)
+        self.setting_button.clicked.connect(self.show_settings)        
+        hselectlayout.addWidget(self.setting_button)
+        
+        vlayout.addLayout(hselectlayout)
 
         self.prompt_input = QPlainTextEdit(self)
         vlayout.addWidget(self.prompt_input)
@@ -34,14 +37,14 @@ class ChatWindow(QWidget):
         self.answer_section.setReadOnly(True)
         vlayout.addWidget(self.answer_section)
 
-        # Set Layout and Window Title
         self.setLayout(vlayout)
         self.setWindowTitle('Chat Window')
+        self.setMinimumWidth(600)
+        self.setMinimumHeight(500)
 
-        # Connect Button Clicks
         self.send_request_button.clicked.connect(self.send_request)
 
-    def send_request(self):        
+    def send_request(self):
         input_text = self.prompt_input.text()
         self.answer_section.append(f"Request Sent: {input_text}")        
 
