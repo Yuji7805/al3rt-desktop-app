@@ -63,8 +63,8 @@ def get_streams_table():
     streams_json = {}
     global assistants
     assistants = fetch_data_from_url(
-        ''.join([BACKEND_BASE, "assistants"]))    
-    
+        ''.join([BACKEND_BASE, "assistants"]))
+
     for assistant in assistants["data"]:
         streams_json[assistant["name"]] = assistant['instructions']
     streams_json = json.dumps(streams_json)
@@ -78,6 +78,7 @@ def get_streams_table():
 
 class SettingWindow(QWidget):
     prompts_updated = pyqtSignal()  # Define the signal
+    streams_updated = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -248,7 +249,7 @@ class SettingWindow(QWidget):
                             "assist-name": stream_name,
                             "assist-type": "code_interpreter",
                         }
-                        print(_data_To_Modify_Assistant)                        
+                        print(_data_To_Modify_Assistant)
                         headers = {
                             "content-type": "application/json"
                         }
@@ -379,6 +380,7 @@ class SettingWindow(QWidget):
 
     def closeEvent(self, event):
         self.prompts_updated.emit()
+        self.streams_updated.emit()
         self.hide()
         event.ignore()
 

@@ -10,6 +10,7 @@ class ChatWindow(QWidget):
 
         self.initUI()
         self.load_prompts()
+        self.load_streams()
 
         # Connect the signal to the slot
         self.setting_window.prompts_updated.connect(self.load_prompts)
@@ -104,19 +105,19 @@ class ChatWindow(QWidget):
 
     def load_prompts(self):
         # Retrieve prompts list from the settings window
-        prompts_list = self.setting_window.get_prompts_list()
+        self.prompts_list = self.setting_window.get_prompts_list()
 
         # Clear any existing items in the combo box
         self.prompt_select_combo.clear()
 
         # Add the retrieved prompts to the combo box
-        for prompt in prompts_list:
+        for prompt in self.prompts_list:
             self.prompt_select_combo.addItem(prompt)
 
     def load_streams(self):
-        streams_list = self.setting_window.get_streams_list()
+        self.streams_list = self.setting_window.get_streams_list()
         self.stream_combo.clear()
-        for stream in streams_list:
+        for stream in self.streams_list:
             self.stream_combo.addItem(stream)
 
     def send_request(self):
