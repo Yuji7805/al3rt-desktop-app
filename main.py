@@ -44,7 +44,7 @@ class SystemTrayApp:
 
         # Add actions to the tray menu
         self.tray_menu.addAction(chat_action)
-        self.tray_menu.addAction(setting_action)
+        # self.tray_menu.addAction(setting_action)
         self.tray_menu.addSeparator()  # Separator line in the context menu
         self.tray_menu.addAction(exit_action)
 
