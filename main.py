@@ -27,7 +27,7 @@ class SystemTrayApp:
         self.setting_window = SettingWindow()
 
         # Create a system tray icon, set an icon image (this should be a .png file located in your app directory)
-        self.tray_icon = QSystemTrayIcon(QIcon('icon.png'), self.app)
+        self.tray_icon = QSystemTrayIcon(QIcon('./assets/app.jpeg'), self.app)
 
         # Create a context menu for the tray icon
         self.tray_menu = QMenu()
@@ -80,20 +80,22 @@ class SystemTrayApp:
             import time
             # Bring the window to the foreground
             win32gui.SetForegroundWindow(hwnd)
-            time.sleep(0.1)  # Add a small delay to allow the window to come to the foreground
-            
+            # Add a small delay to allow the window to come to the foreground
+            time.sleep(0.1)
+
             # Press down the 'Ctrl' key
             win32api.keybd_event(win32con.VK_CONTROL, 0, 0, 0)
 
             # Press and release the 'C' key
             win32api.keybd_event(0x43, 0, 0, 0)              # Down 'C'
-            time.sleep(0.05)  # Add a slight delay between pressing and releasing the key
+            # Add a slight delay between pressing and releasing the key
+            time.sleep(0.05)
             win32api.keybd_event(
                 0x43, 0, win32con.KEYEVENTF_KEYUP, 0)  # Up 'C'
 
             # Release the 'Ctrl' key
             win32api.keybd_event(win32con.VK_CONTROL, 0,
-                                    win32con.KEYEVENTF_KEYUP, 0)
+                                 win32con.KEYEVENTF_KEYUP, 0)
 
             print(f"Sent Ctrl+C to HWND: {hwnd}")
         except Exception as e:
@@ -124,18 +126,18 @@ class SystemTrayApp:
             window_title = focused_window.title
 
             hwnd = self.find_window_by_title(window_title=window_title)
-            
+
             self.send_ctrl_c(hwnd)
             try:
                 selected_text = pyperclip.paste()
                 pyperclip.copy("")
-                return selected_text                
+                return selected_text
             except Exception as e:
                 print(f"Failed to retrieve selected text: {e}")
                 return
         else:
             print("No active window detected")
-            return 
+            return
 
 
 class TrayApplication(QApplication):

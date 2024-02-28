@@ -108,6 +108,8 @@ class ChatWindow(QWidget):
 
         self.send_request_button.clicked.connect(self.send_request)
 
+        self.setWindowIcon(QIcon("./assets/app.jpeg"))
+        self.setWindowTitle("AL3RT CHAT")
         # change theme
         self.setStyleSheet("""
             QWidget {
