@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit, QComboBox, QPlainTextEdit
-from PyQt5.QtGui import QFontDatabase, QIcon
+from PyQt5.QtGui import QIcon
 from setting import SettingWindow
 import requests
 import json

@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QComboBox,
                              QPushButton, QApplication, QHBoxLayout, QLineEdit, QTableWidget, QTableWidgetItem, QMessageBox, QAbstractItemView)
 from PyQt5.QtCore import QSettings, pyqtSignal
-
+from PyQt5.QtGui import QIcon
 import json
 import requests
 
@@ -165,6 +165,9 @@ class SettingWindow(QWidget):
         # Connect Button Clicks
         self.add_stream_btn.clicked.connect(self.add_stream)
         self.add_prompt_btn.clicked.connect(self.add_prompt)
+        
+        self.setWindowTitle("Setting")
+        self.setWindowIcon(QIcon("./assets/setting.png"))
 
         stylesheet = """
             QWidget {
