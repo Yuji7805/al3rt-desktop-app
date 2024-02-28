@@ -3,6 +3,7 @@ from PyQt5.QtGui import QFontDatabase, QIcon
 from setting import SettingWindow
 import requests
 import json
+import pyperclip
 from PyQt5.QtCore import QSettings
 
 ORGANIZATION_NAME = 'MyOrganization'
@@ -32,6 +33,7 @@ class ChatWindow(QWidget):
 
         vlayout = QVBoxLayout()
         hselectlayout = QHBoxLayout()
+        hcopyinsertlayout = QHBoxLayout()
 
         self.stream_combo = QComboBox()
         self.stream_combo.setFixedHeight(24)
@@ -56,6 +58,45 @@ class ChatWindow(QWidget):
         self.send_request_button = QPushButton("Send Request", self)
         vlayout.addWidget(self.send_request_button)
 
+        self.copy_button = QPushButton()
+        self.copy_button.setFixedWidth(22)
+        self.copy_button.setIcon(QIcon("./assets/copy.png"))
+        self.copy_button.setStyleSheet("QPushButton {\n"
+                                        "    border: none;\n"
+                                        "    border-radius: 10px;\n"
+                                        "}\n"
+                                        "QPushButton:hover {\n"
+                                        "    background-color: #a0a0ab;\n"
+                                        "    border-radius: 10px;\n"
+                                        "}\n"
+                                        "QPushButton:pressed {\n"
+                                        "    background-color: #b3b3cc;\n"
+                                        "    border-radius: 10px;\n"
+                                        "}")
+        self.copy_button.clicked.connect(self.copy_answer)
+        
+        self.insert_button = QPushButton()
+        self.insert_button.setFixedWidth(22)
+        self.insert_button.setIcon(QIcon("./assets/insert.png"))
+        self.insert_button.setStyleSheet("QPushButton {\n"
+                                       "    border: none;\n"
+                                       "    border-radius: 10px;\n"
+                                       "}\n"
+                                       "QPushButton:hover {\n"
+                                       "    background-color: #a0a0ab;\n"
+                                       "    border-radius: 10px;\n"
+                                       "}\n"
+                                       "QPushButton:pressed {\n"
+                                       "    background-color: #b3b3cc;\n"
+                                       "    border-radius: 10px;\n"
+                                       "}")
+        # self.insert_button.clicked.connect(self.insert_answer)
+        
+        hcopyinsertlayout.addWidget(self.copy_button)
+        # hcopyinsertlayout.addWidget(self.insert_button)
+        hcopyinsertlayout.addStretch()
+        vlayout.addLayout(hcopyinsertlayout)
+
         self.answer_section = QTextEdit(self)
         self.answer_section.setReadOnly(True)
         vlayout.addWidget(self.answer_section)
@@ -63,7 +104,7 @@ class ChatWindow(QWidget):
         self.setLayout(vlayout)
         self.setWindowTitle('Chat Window')
         self.setMinimumWidth(600)
-        self.setMinimumHeight(500)
+        self.setMinimumHeight(550)
 
         self.send_request_button.clicked.connect(self.send_request)
 
@@ -121,6 +162,12 @@ class ChatWindow(QWidget):
                 spacing: 10px;
             }
         """)
+        
+    def copy_answer(self):
+        pyperclip.copy(self.answer_section.toPlainText())
+        
+    # def insert_answer(self):
+        
 
     def load_prompts(self):
         # Retrieve prompts list from the settings window
