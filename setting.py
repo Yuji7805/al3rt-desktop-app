@@ -9,8 +9,8 @@ BACKEND_BASE = "https://main-monster-decent.ngrok-free.app/openai/"
 
 
 # Define QSettings with your organization and application name
-ORGANIZATION_NAME = 'MyOrganization'
-APPLICATION_NAME = 'MyAppSettings'
+ORGANIZATION_NAME = 'AL3RT'
+APPLICATION_NAME = 'AL3RT'
 
 settings = QSettings(ORGANIZATION_NAME, APPLICATION_NAME)
 
