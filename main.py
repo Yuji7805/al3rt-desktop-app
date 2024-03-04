@@ -94,6 +94,9 @@ class SystemTrayApp:
         self.floating_button.setFixedSize(50, 50)
         self.floating_button.clicked.connect(self.on_floating_button_clicked)
 
+        # Install an event filter to detect mouse clicks outside the floating button
+        app.installEventFilter(self.floating_button)
+
         # Start listening to mouse events
         self.mouse_thread = threading.Thread(target=self.start_mouse_listener)
         self.mouse_thread.start()
