@@ -62,23 +62,6 @@ class ChatWindow(QWidget):
         self.copy_button.setFixedWidth(22)
         self.copy_button.setIcon(QIcon("./assets/copy.png"))
         self.copy_button.setStyleSheet("QPushButton {\n"
-                                        "    border: none;\n"
-                                        "    border-radius: 10px;\n"
-                                        "}\n"
-                                        "QPushButton:hover {\n"
-                                        "    background-color: #a0a0ab;\n"
-                                        "    border-radius: 10px;\n"
-                                        "}\n"
-                                        "QPushButton:pressed {\n"
-                                        "    background-color: #b3b3cc;\n"
-                                        "    border-radius: 10px;\n"
-                                        "}")
-        self.copy_button.clicked.connect(self.copy_answer)
-        
-        self.insert_button = QPushButton()
-        self.insert_button.setFixedWidth(22)
-        self.insert_button.setIcon(QIcon("./assets/insert.png"))
-        self.insert_button.setStyleSheet("QPushButton {\n"
                                        "    border: none;\n"
                                        "    border-radius: 10px;\n"
                                        "}\n"
@@ -90,8 +73,25 @@ class ChatWindow(QWidget):
                                        "    background-color: #b3b3cc;\n"
                                        "    border-radius: 10px;\n"
                                        "}")
+        self.copy_button.clicked.connect(self.copy_answer)
+
+        self.insert_button = QPushButton()
+        self.insert_button.setFixedWidth(22)
+        self.insert_button.setIcon(QIcon("./assets/insert.png"))
+        self.insert_button.setStyleSheet("QPushButton {\n"
+                                         "    border: none;\n"
+                                         "    border-radius: 10px;\n"
+                                         "}\n"
+                                         "QPushButton:hover {\n"
+                                         "    background-color: #a0a0ab;\n"
+                                         "    border-radius: 10px;\n"
+                                         "}\n"
+                                         "QPushButton:pressed {\n"
+                                         "    background-color: #b3b3cc;\n"
+                                         "    border-radius: 10px;\n"
+                                         "}")
         # self.insert_button.clicked.connect(self.insert_answer)
-        
+
         hcopyinsertlayout.addWidget(self.copy_button)
         # hcopyinsertlayout.addWidget(self.insert_button)
         hcopyinsertlayout.addStretch()
@@ -164,12 +164,9 @@ class ChatWindow(QWidget):
                 spacing: 10px;
             }
         """)
-        
+
     def copy_answer(self):
         pyperclip.copy(self.answer_section.toPlainText())
-        
-    # def insert_answer(self):
-        
 
     def load_prompts(self):
         # Retrieve prompts list from the settings window

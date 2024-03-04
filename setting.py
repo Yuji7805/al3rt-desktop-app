@@ -75,7 +75,7 @@ def get_streams_table():
         except json.JSONDecodeError:
             # Handle case where JSON is not decodable, return empty dict
             return {}
-    
+
 
 class SettingWindow(QWidget):
     prompts_updated = pyqtSignal()  # Define the signal
@@ -412,7 +412,8 @@ class SettingWindow(QWidget):
                 btn_layout = QHBoxLayout()
                 # Optional: Remove margins if preferred
                 btn_layout.setContentsMargins(0, 0, 0, 0)
-                btn_layout.setSpacing(2)  # Optional: Set spacing between buttons
+                # Optional: Set spacing between buttons
+                btn_layout.setSpacing(2)
 
                 edit_button = QPushButton('Edit')
                 edit_button.setFixedWidth(30)
@@ -446,6 +447,7 @@ class SettingWindow(QWidget):
             return [stream_name for stream_name, instruction in self._streams_data.items()]
         else:
             return []
+
     def get_streams_object(self):
         return json.dumps(self._streams_data)
 
@@ -485,9 +487,12 @@ class SettingWindow(QWidget):
                     print(e)
 
     def get_assistant_id(self, stream_name):
-        for assistant in assistants["data"]:
-            if assistant["name"] == stream_name:
-                return assistant["id"]
+        try:
+            for assistant in assistants["data"]:
+                if assistant["name"] == stream_name:
+                    return assistant["id"]
+        except:
+            print("Network error")
 
     def closeEvent(self, event):
         self.prompts_updated.emit()
