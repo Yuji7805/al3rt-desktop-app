@@ -1,17 +1,13 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QMessageBox
-from PyQt5.QtGui import QIcon, QGuiApplication, QClipboard
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtGui import QIcon
 import pyperclip
-
-import win32clipboard
 import keyboard
 
 # Import ChatWindow and SettingWindow classes from their respective files
 from chat import ChatWindow
 from setting import SettingWindow
 import win32gui
-import win32api
-import win32con
 
 
 class SystemTrayApp:
@@ -71,9 +67,6 @@ class SystemTrayApp:
 
     def run(self):
         sys.exit(self.app.exec_())
-
-    # Function to send a key press event to the window
-    # Function to send Ctrl+C to the window
 
     # Function to find window by title
     def find_window_by_title(self, window_title):
