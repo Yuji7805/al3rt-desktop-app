@@ -2,7 +2,7 @@ import signal
 import sys
 from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QPushButton
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QMetaObject
 import pyperclip
 import keyboard
 import threading
@@ -115,20 +115,29 @@ class SystemTrayApp:
 
     def show_chat(self):
         print("clilcked......")
+        # Clear the status of all pressed keys
+        pressed_keys = keyboard._pressed_events  # Get the dictionary of pressed keys
+        for key in pressed_keys:
+            keyboard.release(key)
         text_to_send = self.copy_selected_text()
         self.chat_window.set_prompt_text(text_to_send)
         # Make sure the chat window is shown even if it was closed or hidden
-        if self.chat_window.isHidden():
-            self.chat_window.show()
-        else:
-            self.chat_window.activateWindow()
+        # if self.chat_window.isHidden():
+        #     self.chat_window.show()
+        # else:
+        #     self.chat_window.activateWindow()
+        QMetaObject.invokeMethod(self.chat_window, "show", Qt.QueuedConnection)
+        # invokeMethod can now safely trigger the .show() method of the chat_window in the context of the main thread.
 
     def show_settings(self):
         self.setting_window.show()
 
     def exit_app(self):
-        print(self.mouse_thread.is_alive())
-        self.mouse_thread.join()
+        print("Exiting application...")
+        self.stop_mouse_listener()
+        if self.mouse_thread.is_alive():
+            # Now we can safely wait for the thread to finish since we know the listener has been stopped.
+            self.mouse_thread.join()
         self.app.quit()
 
     def run(self):
@@ -174,8 +183,8 @@ class SystemTrayApp:
                 selected_text = pyperclip.paste()
                 print("Selected text:", selected_text)
 
-                self.floating_button.move(x + 20, y + 20)
-                self.floating_button.show()
+                # self.floating_button.move(x + 20, y + 20)
+                # self.floating_button.show()
 
 
 def on_exit(app_instance):
