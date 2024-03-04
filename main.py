@@ -1,7 +1,8 @@
 import signal
 import sys
-from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QPushButton
 from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt
 import pyperclip
 import keyboard
 import threading
@@ -25,6 +26,23 @@ def handle_sigint(sig, frame):
 
 # Attach the SIGINT signal handler
 signal.signal(signal.SIGINT, handle_sigint)
+
+
+class FloatingButton(QPushButton):
+    def __init__(self, icon_path, parent=None):
+        super().__init__(parent)
+        self.setIcon(QIcon(icon_path))
+        self.setWindowFlags(Qt.WindowStaysOnTopHint |
+                            Qt.FramelessWindowHint | Qt.Tool)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+
+    def enterEvent(self, event):
+        self.show()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.hide()
+        super().leaveEvent(event)
 
 
 class TrayApplication(QApplication):
@@ -72,11 +90,15 @@ class SystemTrayApp:
         self.tray_icon.show()
         self.show_chat()
 
+        self.floating_button = FloatingButton()
+        self.floating_button.clicked.connect(self.on_floating_button_clicked)
+
         # Start listening to mouse events
-        # with Listener(on_click=self.on_click) as listener:
-        #     listener.join()
         self.mouse_thread = threading.Thread(target=self.start_mouse_listener)
         self.mouse_thread.start()
+
+    def on_floating_button_clicked(self):
+        self.show_chat()
 
     def start_mouse_listener(self):
         self.mouse_listener = Listener(on_click=self.on_click)
@@ -147,6 +169,9 @@ class SystemTrayApp:
                 pyautogui.hotkey('ctrl', 'c')
                 selected_text = pyperclip.paste()
                 print("Selected text:", selected_text)
+
+                self.floating_button.move(x + 20, y + 20)
+                self.floating_button.show()
 
 
 def on_exit(app_instance):
