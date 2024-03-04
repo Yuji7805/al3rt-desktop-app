@@ -72,8 +72,8 @@ class SystemTrayApp:
         # Start listening to mouse events
         # with Listener(on_click=self.on_click) as listener:
         #     listener.join()
-        mouse_thread = threading.Thread(target=self.start_mouse_listener)
-        mouse_thread.start()
+        self.mouse_thread = threading.Thread(target=self.start_mouse_listener)
+        self.mouse_thread.start()
 
     def start_mouse_listener(self):
         with Listener(on_click=self.on_click) as listener:
@@ -93,6 +93,8 @@ class SystemTrayApp:
         self.setting_window.show()
 
     def exit_app(self):
+        print(self.mouse_thread.is_alive())
+        self.mouse_thread.join()
         self.app.quit()
 
     def run(self):
@@ -118,8 +120,6 @@ class SystemTrayApp:
         print(focused_window.title)
         print("====== end ======")
         if focused_window:
-            print(type(focused_window.title))
-
             try:
                 selected_text = pyperclip.paste()
                 return selected_text
