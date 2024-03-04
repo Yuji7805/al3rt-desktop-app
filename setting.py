@@ -64,17 +64,18 @@ def get_streams_table():
     global assistants
     assistants = fetch_data_from_url(
         ''.join([BACKEND_BASE, "assistants"]))
-
-    for assistant in assistants["data"]:
-        streams_json[assistant["name"]] = assistant['instructions']
-    streams_json = json.dumps(streams_json)
-    try:
-        stream_dict = json.loads(streams_json)
-        return stream_dict
-    except json.JSONDecodeError:
-        # Handle case where JSON is not decodable, return empty dict
-        return {}
-
+    print(assistants)
+    if assistants != None:
+        for assistant in assistants["data"]:
+            streams_json[assistant["name"]] = assistant['instructions']
+        streams_json = json.dumps(streams_json)
+        try:
+            stream_dict = json.loads(streams_json)
+            return stream_dict
+        except json.JSONDecodeError:
+            # Handle case where JSON is not decodable, return empty dict
+            return {}
+    
 
 class SettingWindow(QWidget):
     prompts_updated = pyqtSignal()  # Define the signal
@@ -149,10 +150,10 @@ class SettingWindow(QWidget):
         self.prompt_table = QTableWidget(0, 3)
 
         self.prompt_table.setHorizontalHeaderLabels(
-            ["Prompt", "Description", "Actions"])        
-        self.prompt_table.horizontalHeader().setStretchLastSection(True)        
+            ["Prompt", "Description", "Actions"])
+        self.prompt_table.horizontalHeader().setStretchLastSection(True)
         self.prompt_table.setColumnWidth(0, 150)
-        self.prompt_table.setColumnWidth(1, 180)        
+        self.prompt_table.setColumnWidth(1, 180)
 
         self.prompt_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.prompt_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -165,7 +166,7 @@ class SettingWindow(QWidget):
         # Connect Button Clicks
         self.add_stream_btn.clicked.connect(self.add_stream)
         self.add_prompt_btn.clicked.connect(self.add_prompt)
-        
+
         self.setWindowTitle("Setting")
         self.setWindowIcon(QIcon("./assets/setting.png"))
 
@@ -397,39 +398,39 @@ class SettingWindow(QWidget):
 
     def update_table_with_streams(self):
         self.stream_table.setRowCount(0)  # Clear the table
-        for stream_name, description in self._streams_data.items():
-            row_position = self.stream_table.rowCount()
-            self.stream_table.insertRow(row_position)
-            self.stream_table.setItem(
-                row_position, 0, QTableWidgetItem(stream_name))
-            self.stream_table.setItem(
-                row_position, 1, QTableWidgetItem(description))
+        if self._streams_data != None:
+            for stream_name, description in self._streams_data.items():
+                row_position = self.stream_table.rowCount()
+                self.stream_table.insertRow(row_position)
+                self.stream_table.setItem(
+                    row_position, 0, QTableWidgetItem(stream_name))
+                self.stream_table.setItem(
+                    row_position, 1, QTableWidgetItem(description))
 
-            # Create widget layout for Edit/Delete buttons
-            widget = QWidget()
-            btn_layout = QHBoxLayout()
-            # Optional: Remove margins if preferred
-            btn_layout.setContentsMargins(0, 0, 0, 0)
-            btn_layout.setSpacing(2)  # Optional: Set spacing between buttons
+                # Create widget layout for Edit/Delete buttons
+                widget = QWidget()
+                btn_layout = QHBoxLayout()
+                # Optional: Remove margins if preferred
+                btn_layout.setContentsMargins(0, 0, 0, 0)
+                btn_layout.setSpacing(2)  # Optional: Set spacing between buttons
 
-            edit_button = QPushButton('Edit')
-            edit_button.setFixedWidth(30)
-            delete_button = QPushButton('Delete')
-            delete_button.setFixedWidth(40)
-            delete_button.setStyleSheet('background-color:"#e01111"')
+                edit_button = QPushButton('Edit')
+                edit_button.setFixedWidth(30)
+                delete_button = QPushButton('Delete')
+                delete_button.setFixedWidth(40)
+                delete_button.setStyleSheet('background-color:"#e01111"')
 
+                edit_button.clicked.connect(
+                    lambda _, s=stream_name: self.edit_stream(s))
+                delete_button.clicked.connect(
+                    lambda _, s=stream_name: self.delete_stream(s))
 
-            edit_button.clicked.connect(
-                lambda _, s=stream_name: self.edit_stream(s))
-            delete_button.clicked.connect(
-                lambda _, s=stream_name: self.delete_stream(s))
+                btn_layout.addWidget(edit_button)
+                btn_layout.addWidget(delete_button)
 
-            btn_layout.addWidget(edit_button)
-            btn_layout.addWidget(delete_button)
+                widget.setLayout(btn_layout)
 
-            widget.setLayout(btn_layout)
-
-            self.stream_table.setCellWidget(row_position, 2, widget)
+                self.stream_table.setCellWidget(row_position, 2, widget)
 
     def edit_stream(self, stream_name):
         instruction = self._streams_data.get(stream_name)
@@ -441,8 +442,10 @@ class SettingWindow(QWidget):
             self.currently_editing_stream = stream_name
 
     def get_streams_list(self):
-        return [stream_name for stream_name, instruction in self._streams_data.items()]
-
+        if self._streams_data != None:
+            return [stream_name for stream_name, instruction in self._streams_data.items()]
+        else:
+            return []
     def get_streams_object(self):
         return json.dumps(self._streams_data)
 

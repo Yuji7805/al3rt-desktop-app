@@ -6,7 +6,6 @@ start_y = None
 
 
 def on_click(x, y, button, pressed):
-    action = 'Pressed' if pressed else 'Released'
     global start_x, start_y
     if pressed:
         start_x, start_y = x, y
@@ -18,7 +17,6 @@ def on_click(x, y, button, pressed):
 def on_select():
     import pyautogui
 
-    # Simulate Ctrl + C to copy the selected text to the clipboard
     pyautogui.hotkey('ctrl', 'c')
 
     selected_text = pyperclip.paste()
