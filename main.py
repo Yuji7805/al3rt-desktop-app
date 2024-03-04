@@ -91,6 +91,7 @@ class SystemTrayApp:
         self.show_chat()
 
         self.floating_button = FloatingButton(icon_path="./assets/app.jpeg")
+        self.floating_button.setFixedSize(50, 50)
         self.floating_button.clicked.connect(self.on_floating_button_clicked)
 
         # Start listening to mouse events
