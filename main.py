@@ -75,32 +75,6 @@ class SystemTrayApp:
     # Function to send a key press event to the window
     # Function to send Ctrl+C to the window
 
-    def send_ctrl_c(self, hwnd):
-        try:
-            import time
-            # Bring the window to the foreground
-            win32gui.SetForegroundWindow(hwnd)
-            # Add a small delay to allow the window to come to the foreground
-            time.sleep(0.1)
-
-            # Press down the 'Ctrl' key
-            win32api.keybd_event(win32con.VK_CONTROL, 0, 0, 0)
-
-            # Press and release the 'C' key
-            win32api.keybd_event(0x43, 0, 0, 0)              # Down 'C'
-            # Add a slight delay between pressing and releasing the key
-            time.sleep(0.05)
-            win32api.keybd_event(
-                0x43, 0, win32con.KEYEVENTF_KEYUP, 0)  # Up 'C'
-
-            # Release the 'Ctrl' key
-            win32api.keybd_event(win32con.VK_CONTROL, 0,
-                                 win32con.KEYEVENTF_KEYUP, 0)
-
-            print(f"Sent Ctrl+C to HWND: {hwnd}")
-        except Exception as e:
-            print(e)
-
     # Function to find window by title
     def find_window_by_title(self, window_title):
         try:
