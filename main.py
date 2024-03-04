@@ -90,7 +90,7 @@ class SystemTrayApp:
         self.tray_icon.show()
         self.show_chat()
 
-        self.floating_button = FloatingButton()
+        self.floating_button = FloatingButton(icon_path="./assets/app.jpeg")
         self.floating_button.clicked.connect(self.on_floating_button_clicked)
 
         # Start listening to mouse events
