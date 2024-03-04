@@ -76,8 +76,13 @@ class SystemTrayApp:
         self.mouse_thread.start()
 
     def start_mouse_listener(self):
-        with Listener(on_click=self.on_click) as listener:
-            listener.join()
+        self.mouse_listener = Listener(on_click=self.on_click)
+        self.mouse_listener.start()  # We call start instead of join here
+        self.mouse_listener.wait()   # Wait for the listener to become ready
+
+    def stop_mouse_listener(self):  # Rename this method to stop_mouse_listener
+        if self.mouse_listener is not None:
+            self.mouse_listener.stop()
 
     def show_chat(self):
         print("clilcked......")
@@ -141,15 +146,17 @@ class SystemTrayApp:
                 print("Selected text:", selected_text)
 
 
-def on_exit():
-    # Remember to clean up the hotkey when the application exits
-    keyboard.unhook_all_hotkeys()
+def on_exit(app_instance):
+    def handle_exit():
+        app_instance.exit_app()
+
+    return handle_exit
 
 
 if __name__ == '__main__':
     app = TrayApplication(sys.argv)
     tray_app = SystemTrayApp(app)
-    app.aboutToQuit.connect(on_exit)
+    app.aboutToQuit.connect(on_exit(tray_app))
     try:
         sys.exit(app.exec_())
     except KeyboardInterrupt:
