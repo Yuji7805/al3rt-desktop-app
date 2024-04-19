@@ -5,7 +5,8 @@ from PyQt5.QtGui import QIcon
 import json
 import requests
 
-BACKEND_BASE = "https://main-monster-decent.ngrok-free.app/openai/"
+BACKEND_BASE = "https://al3rt.me/app/openai/"
+# BACKEND_BASE = "http://localhost:5000/app/openai/"
 
 
 # Define QSettings with your organization and application name
@@ -61,11 +62,23 @@ def get_streams_table():
     # Retrieve the JSON string from settings
     # Provide a default value of '{}'
     streams_json = {}
-    global assistants
-    assistants = fetch_data_from_url(
-        ''.join([BACKEND_BASE, "assistants"]))
-    print(assistants)
-    if assistants != None:
+    global assistants  # Include the CSRF token in the request headers
+    access_token = settings.value('access_token', '')
+
+    if len(access_token) == 0:
+        return
+
+    headers = {
+        'Authorization': "Bearer " + access_token
+    }
+
+    response = requests.get(
+        ''.join([BACKEND_BASE, "assistants"]), headers=headers)
+    print(response)
+    print(response.text)
+    if response.status_code == 200:
+        assistants = response.json()
+        print(assistants)
         for assistant in assistants["data"]:
             streams_json[assistant["name"]] = assistant['instructions']
         streams_json = json.dumps(streams_json)
@@ -75,13 +88,17 @@ def get_streams_table():
         except json.JSONDecodeError:
             # Handle case where JSON is not decodable, return empty dict
             return {}
+    else:
+        # Handle the case where the request fails
+        return {}
 
 
 class SettingWindow(QWidget):
     prompts_updated = pyqtSignal()  # Define the signal
     streams_updated = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, callback):
+        self.callback = callback
         super().__init__()
         self._prompts_data = {}  # Temporary in-memory storage for prompts
         self._streams_data = {}
@@ -112,7 +129,7 @@ class SettingWindow(QWidget):
         stream_layout.addWidget(self.stream_input)
 
         self.instruction_input = QLineEdit(self)
-        stream_layout.addWidget(QLabel("Instruction:"))
+        stream_layout.addWidget(QLabel("Description:"))
         stream_layout.addWidget(self.instruction_input)
 
         self.add_stream_btn = QPushButton("Add Stream", self)
@@ -122,7 +139,7 @@ class SettingWindow(QWidget):
         self.stream_table = QTableWidget()
         self.stream_table.setColumnCount(3)
         self.stream_table.setHorizontalHeaderLabels(
-            ["Stream", "Instruction", "Actions"])
+            ["Stream", "Description", "Actions"])
         self.stream_table.horizontalHeader().setStretchLastSection(True)
         self.stream_table.setColumnWidth(0, 150)
         self.stream_table.setColumnWidth(1, 180)
@@ -314,7 +331,7 @@ class SettingWindow(QWidget):
             self.currently_editing_prompt = prompt
 
     def get_prompts_list(self):
-        return [prompt for prompt, description in self._prompts_data.items()]
+        return [(prompt, description) for prompt, description in self._prompts_data.items()]
 
     def get_prompts_object(self):
         return self._prompts_data
@@ -347,8 +364,14 @@ class SettingWindow(QWidget):
                             "assist-type": "code_interpreter",
                         }
                         print(_data_To_Modify_Assistant)
+                        access_token = settings.value('access_token', '')
+
+                        if len(access_token) == 0:
+                            return
+
                         headers = {
-                            "content-type": "application/json"
+                            'Authorization': "Bearer " + access_token,
+                            "content-type": "application/json",
                         }
                         response = requests.post(''.join(
                             [BACKEND_BASE, "assistants/modify"]), headers=headers, data=json.dumps(_data_To_Modify_Assistant))
@@ -371,8 +394,13 @@ class SettingWindow(QWidget):
                     "assist-name": stream_name,
                     "assist-type": "code_interpreter",
                 }
+                access_token = settings.value('access_token', '')
+
+                if len(access_token) == 0:
+                    return
 
                 headers = {
+                    'Authorization': "Bearer " + access_token,
                     "content-type": "application/json"
                 }
                 response = requests.post(''.join(
@@ -415,6 +443,8 @@ class SettingWindow(QWidget):
                 # Optional: Set spacing between buttons
                 btn_layout.setSpacing(2)
 
+                if stream_name == 'Default':
+                    continue
                 edit_button = QPushButton('Edit')
                 edit_button.setFixedWidth(30)
                 delete_button = QPushButton('Delete')
@@ -459,7 +489,13 @@ class SettingWindow(QWidget):
                 payload = json.dumps({
                     "asstid": asstId
                 })
+                access_token = settings.value('access_token', '')
+
+                if len(access_token) == 0:
+                    return
+
                 headers = {
+                    'Authorization': "Bearer " + access_token,
                     "content-type": "application/json"
                 }
                 response = requests.delete(
@@ -498,6 +534,7 @@ class SettingWindow(QWidget):
         self.prompts_updated.emit()
         self.streams_updated.emit()
         self.hide()
+        self.callback()
         event.ignore()
 
 

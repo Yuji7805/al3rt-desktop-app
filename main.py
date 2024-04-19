@@ -61,7 +61,7 @@ class SystemTrayApp:
 
         # Create instances of the windows but don't show them yet
         self.chat_window = ChatWindow()
-        self.setting_window = SettingWindow()
+        self.setting_window = SettingWindow(self.chat_window.load_streams)
 
         # Create a system tray icon, set an icon image (this should be a .png file located in your app directory)
         self.tray_icon = QSystemTrayIcon(QIcon('./assets/app.jpeg'), self.app)
