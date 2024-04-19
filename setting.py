@@ -97,7 +97,8 @@ class SettingWindow(QWidget):
     prompts_updated = pyqtSignal()  # Define the signal
     streams_updated = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, callback):
+        self.callback = callback
         super().__init__()
         self._prompts_data = {}  # Temporary in-memory storage for prompts
         self._streams_data = {}
@@ -128,7 +129,7 @@ class SettingWindow(QWidget):
         stream_layout.addWidget(self.stream_input)
 
         self.instruction_input = QLineEdit(self)
-        stream_layout.addWidget(QLabel("Instruction:"))
+        stream_layout.addWidget(QLabel("Description:"))
         stream_layout.addWidget(self.instruction_input)
 
         self.add_stream_btn = QPushButton("Add Stream", self)
@@ -138,7 +139,7 @@ class SettingWindow(QWidget):
         self.stream_table = QTableWidget()
         self.stream_table.setColumnCount(3)
         self.stream_table.setHorizontalHeaderLabels(
-            ["Stream", "Instruction", "Actions"])
+            ["Stream", "Description", "Actions"])
         self.stream_table.horizontalHeader().setStretchLastSection(True)
         self.stream_table.setColumnWidth(0, 150)
         self.stream_table.setColumnWidth(1, 180)
@@ -330,7 +331,7 @@ class SettingWindow(QWidget):
             self.currently_editing_prompt = prompt
 
     def get_prompts_list(self):
-        return [prompt for prompt, description in self._prompts_data.items()]
+        return [(prompt, description) for prompt, description in self._prompts_data.items()]
 
     def get_prompts_object(self):
         return self._prompts_data
@@ -442,6 +443,8 @@ class SettingWindow(QWidget):
                 # Optional: Set spacing between buttons
                 btn_layout.setSpacing(2)
 
+                if stream_name == 'Default':
+                    continue
                 edit_button = QPushButton('Edit')
                 edit_button.setFixedWidth(30)
                 delete_button = QPushButton('Delete')
@@ -531,6 +534,7 @@ class SettingWindow(QWidget):
         self.prompts_updated.emit()
         self.streams_updated.emit()
         self.hide()
+        self.callback()
         event.ignore()
 
 

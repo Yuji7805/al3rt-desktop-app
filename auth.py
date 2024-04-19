@@ -95,8 +95,8 @@ class LoginForm(QDialog):
     def login(self):
         username = self.username_input.text()
         password = self.password_input.text()
-        username = "Yuji Koyama"
-        password = "qweqweqwe"
+        # username = "Yuji Koyama"
+        # password = "qweqweqwe"
         # Send a POST request to the Flask backend's /login endpoint
         # url = 'http://localhost:5000/app/login'
         url = 'https://al3rt.me/app/login'
@@ -117,9 +117,13 @@ class LoginForm(QDialog):
                 self.msg.exec_()
                 # enable UI
                 self.callback()
-                
+
                 self.close()
             else:
+                self.msg.setWindowTitle("Error")
+                self.msg.setText(
+                    "Login Failed.\nUser name or password is incorrect!")
+                self.msg.exec_()
                 # Login failed, display an error message
                 print("Login failed")
 

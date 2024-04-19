@@ -21,7 +21,7 @@ BACKEND_BASE = "https://al3rt.me/"
 class ChatWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setting_window = SettingWindow()
+        self.setting_window = SettingWindow(self.load_streams)
 
         self.initUI()
 
@@ -222,8 +222,12 @@ class ChatWindow(QWidget):
         self.prompt_select_combo.clear()
 
         # Add the retrieved prompts to the combo box
-        for prompt in self.prompts_list:
-            self.prompt_select_combo.addItem(prompt)
+        for prompt, desctiption in self.prompts_list:
+            # show prompt name
+            # self.prompt_select_combo.addItem(prompt)
+
+            # show prompt description
+            self.prompt_select_combo.addItem(desctiption)
 
     def load_streams(self):
         print("loading streams in chat")
@@ -234,7 +238,6 @@ class ChatWindow(QWidget):
             self.login_button.setVisible(True)
             self.logout_button.setVisible(False)
         else:
-            self.show_msg("Login Succeed!")
             self.login_button.setVisible(False)
             self.logout_button.setVisible(True)
             self.stream_combo.clear()
@@ -258,6 +261,7 @@ class ChatWindow(QWidget):
             self.login_button.setVisible(True)
             self.logout_button.setVisible(False)
             self.disable_UI()
+            self.show_msg('Logged Out!\nAll actions are disabled.')
             return True
         return False
 
@@ -283,8 +287,12 @@ class ChatWindow(QWidget):
         # Get the currently selected prompt
         selected_prompt = self.prompt_select_combo.currentText()
         if selected_prompt:
-            prompts_object = self.setting_window.get_prompts_object()
-            prompt_description = prompts_object[selected_prompt]
+            # show prompt name
+            # prompts_object = self.setting_window.get_prompts_object()
+            # prompt_description = prompts_object[selected_prompt]
+
+            # show prompt description
+            prompt_description = selected_prompt
 
             # Update the prompt input with the selected prompt and the current input text
             complete_text = f"{prompt_description}: {self.previous_input}"
@@ -326,9 +334,17 @@ class ChatWindow(QWidget):
         print("use existing thread: ", existingthread)
         if not str(existingthread).startswith("thread_"):
             try:
-                url = "https://al3rt.me/openai/threads/create"
+                url = "https://al3rt.me/app/openai/threads/create"
                 # Assuming JSON content type
-                headers = {'Content-Type': 'application/json'}
+                access_token = settings.value('access_token', '')
+
+                if len(access_token) == 0:
+                    return
+
+                headers = {
+                    'Authorization': "Bearer " + access_token,
+                    'Content-Type': 'application/json'
+                }
 
                 response = requests.post(url, headers=headers)
                 response.raise_for_status()  # Raise an error for bad status codes
