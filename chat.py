@@ -1,17 +1,21 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit, QComboBox, QPlainTextEdit
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QApplication, QPushButton, QTextEdit, QComboBox, QPlainTextEdit, QMessageBox
+from PyQt5.QtGui import QIcon, QDesktopServices
+from PyQt5.QtCore import QUrl
 from setting import SettingWindow
 import requests
 import json
 import pyperclip
 from PyQt5.QtCore import QSettings
+import auth
 
-ORGANIZATION_NAME = 'MyOrganization'
-APPLICATION_NAME = 'MyAppSettings'
+import requests
+
+ORGANIZATION_NAME = 'AL3RT'
+APPLICATION_NAME = 'AL3RT'
 
 settings = QSettings(ORGANIZATION_NAME, APPLICATION_NAME)
 
-BACKEND_BASE = "https://main-monster-decent.ngrok-free.app/openai/"
+BACKEND_BASE = "https://al3rt.me/"
 
 
 class ChatWindow(QWidget):
@@ -20,6 +24,10 @@ class ChatWindow(QWidget):
         self.setting_window = SettingWindow()
 
         self.initUI()
+
+        self.error_dialog = QMessageBox()
+
+        self.auth = auth.LoginForm(self.enable_UI)
         self.load_prompts()
         self.load_streams()
 
@@ -34,6 +42,21 @@ class ChatWindow(QWidget):
         vlayout = QVBoxLayout()
         hselectlayout = QHBoxLayout()
         hcopyinsertlayout = QHBoxLayout()
+        self.authLayout = QHBoxLayout()
+
+        # Add sign in button
+        self.login_button = QPushButton("Login", self)
+        self.login_button.clicked.connect(self.show_auth)
+
+        # Add sign out button
+        self.logout_button = QPushButton("Logout", self)
+        self.logout_button.clicked.connect(self.logout)
+
+        self.authLayout.addStretch()
+        self.authLayout.addWidget(self.logout_button)
+        self.authLayout.addWidget(self.login_button)
+
+        vlayout.addLayout(self.authLayout)
 
         self.stream_combo = QComboBox()
         self.stream_combo.setFixedHeight(24)
@@ -52,6 +75,7 @@ class ChatWindow(QWidget):
 
         vlayout.addLayout(hselectlayout)
 
+        # input text
         self.prompt_input = QPlainTextEdit(self)
         vlayout.addWidget(self.prompt_input)
 
@@ -165,6 +189,28 @@ class ChatWindow(QWidget):
             }
         """)
 
+    def show_err_msg(self, msg):
+        # Show Error Message Dialog
+        self.error_dialog.setWindowTitle("Error")
+        self.error_dialog.setIcon(QMessageBox.Critical)
+        self.error_dialog.setText(msg)
+        self.error_dialog.exec_()
+
+    def show_msg(self, msg):
+        self.error_dialog.setIcon(QMessageBox.Information)
+        self.error_dialog.setWindowTitle("Success")
+        self.error_dialog.setText(msg)
+        self.error_dialog.exec_()
+
+    def show_auth(self):
+        self.auth.setModal(True)
+        self.auth.exec_()
+
+    def open_backend_link(self):
+        # Open the backend link in the default web browser
+        backend_url = QUrl(BACKEND_BASE)
+        QDesktopServices.openUrl(backend_url)
+
     def copy_answer(self):
         pyperclip.copy(self.answer_section.toPlainText())
 
@@ -180,10 +226,58 @@ class ChatWindow(QWidget):
             self.prompt_select_combo.addItem(prompt)
 
     def load_streams(self):
+        print("loading streams in chat")
         self.streams_list = self.setting_window.get_streams_list()
-        self.stream_combo.clear()
-        for stream in self.streams_list:
-            self.stream_combo.addItem(stream)
+        if len(self.streams_list) == 0:
+            self.disable_UI()
+            self.show_err_msg("Please login to al3rt.me!")
+            self.login_button.setVisible(True)
+            self.logout_button.setVisible(False)
+        else:
+            self.show_msg("Login Succeed!")
+            self.login_button.setVisible(False)
+            self.logout_button.setVisible(True)
+            self.stream_combo.clear()
+            for stream in self.streams_list:
+                self.stream_combo.addItem(stream)
+
+    def logout(self):
+        print("logout called")
+        access_token = settings.value('access_token', '')
+        print(access_token)
+        if len(access_token) == 0:
+            return
+
+        headers = {
+            'Authorization': "Bearer " + access_token
+        }
+        print(headers)
+        response = requests.get("https://al3rt.me/app/logout", headers=headers)
+        print(response)
+        if response.ok:
+            self.login_button.setVisible(True)
+            self.logout_button.setVisible(False)
+            self.disable_UI()
+            return True
+        return False
+
+    def disable_UI(self):
+        self.send_request_button.setDisabled(True)
+        self.stream_combo.setDisabled(True)
+        self.prompt_select_combo.setDisabled(True)
+        self.setting_button.setDisabled(True)
+        self.prompt_input.setDisabled(True)
+        self.copy_button.setDisabled(True)
+
+    def enable_UI(self):
+        self.load_streams()
+        self.load_prompts()
+        self.send_request_button.setEnabled(True)
+        self.stream_combo.setEnabled(True)
+        self.prompt_select_combo.setEnabled(True)
+        self.setting_button.setEnabled(True)
+        self.prompt_input.setEnabled(True)
+        self.copy_button.setEnabled(True)
 
     def update_prompt_input(self):
         # Get the currently selected prompt
@@ -191,45 +285,48 @@ class ChatWindow(QWidget):
         if selected_prompt:
             prompts_object = self.setting_window.get_prompts_object()
             prompt_description = prompts_object[selected_prompt]
+
             # Update the prompt input with the selected prompt and the current input text
             complete_text = f"{prompt_description}: {self.previous_input}"
             self.prompt_input.setPlainText(complete_text)
 
     def send_request(self):
+
         # Use currentText() instead of text(), as QComboBox does not have text() method
         prompt = self.prompt_input.toPlainText()
-        stream_name = self.stream_combo.currentText()
-        asstId = self.setting_window.get_assistant_id(stream_name)
-        if prompt.__len__() > 0:
-            request = {
-                "thdid": self.threadId,
-                "asstid": asstId,
-                "content": prompt,
-            }
+        if len(prompt) > 0:
+            stream_name = self.stream_combo.currentText()
+            asstId = self.setting_window.get_assistant_id(stream_name)
+            if prompt.__len__() > 0:
+                request = {
+                    "thdid": self.threadId,
+                    "asstid": asstId,
+                    "content": prompt,
+                }
 
-            print(request)
-            headers = {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-            }
+                print(request)
+                headers = {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                }
 
-            response = requests.post(''.join([BACKEND_BASE, 'run']),
-                                     headers=headers, data=json.dumps(request))
-            print(response)
-            if response.ok:
-                gptAnswer = response.json()["content"][0]["text"]
-                self.answer_section.setText(gptAnswer)
-            else:
-                response.raise_for_status()
-                self.answer_section.setText(
-                    "Error: ", response.raise_for_status())
+                response = requests.post(''.join([BACKEND_BASE, 'openai/run']),
+                                         headers=headers, data=json.dumps(request))
+                print(response)
+                if response.ok:
+                    gptAnswer = response.json()["content"][0]["text"]
+                    self.answer_section.setText(gptAnswer)
+                else:
+                    response.raise_for_status()
+                    self.answer_section.setText(
+                        "Error: ", response.raise_for_status())
 
     def create_openai_thread(self):
         existingthread = settings.value("thdid")
         print("use existing thread: ", existingthread)
         if not str(existingthread).startswith("thread_"):
             try:
-                url = "https://main-monster-decent.ngrok-free.app/openai/threads/create"
+                url = "https://al3rt.me/openai/threads/create"
                 # Assuming JSON content type
                 headers = {'Content-Type': 'application/json'}
 

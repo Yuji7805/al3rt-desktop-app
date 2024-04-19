@@ -5,7 +5,8 @@ from PyQt5.QtGui import QIcon
 import json
 import requests
 
-BACKEND_BASE = "https://main-monster-decent.ngrok-free.app/openai/"
+BACKEND_BASE = "https://al3rt.me/app/openai/"
+# BACKEND_BASE = "http://localhost:5000/app/openai/"
 
 
 # Define QSettings with your organization and application name
@@ -61,11 +62,23 @@ def get_streams_table():
     # Retrieve the JSON string from settings
     # Provide a default value of '{}'
     streams_json = {}
-    global assistants
-    assistants = fetch_data_from_url(
-        ''.join([BACKEND_BASE, "assistants"]))
-    print(assistants)
-    if assistants != None:
+    global assistants  # Include the CSRF token in the request headers
+    access_token = settings.value('access_token', '')
+
+    if len(access_token) == 0:
+        return
+
+    headers = {
+        'Authorization': "Bearer " + access_token
+    }
+
+    response = requests.get(
+        ''.join([BACKEND_BASE, "assistants"]), headers=headers)
+    print(response)
+    print(response.text)
+    if response.status_code == 200:
+        assistants = response.json()
+        print(assistants)
         for assistant in assistants["data"]:
             streams_json[assistant["name"]] = assistant['instructions']
         streams_json = json.dumps(streams_json)
@@ -75,6 +88,9 @@ def get_streams_table():
         except json.JSONDecodeError:
             # Handle case where JSON is not decodable, return empty dict
             return {}
+    else:
+        # Handle the case where the request fails
+        return {}
 
 
 class SettingWindow(QWidget):
@@ -347,8 +363,14 @@ class SettingWindow(QWidget):
                             "assist-type": "code_interpreter",
                         }
                         print(_data_To_Modify_Assistant)
+                        access_token = settings.value('access_token', '')
+
+                        if len(access_token) == 0:
+                            return
+
                         headers = {
-                            "content-type": "application/json"
+                            'Authorization': "Bearer " + access_token,
+                            "content-type": "application/json",
                         }
                         response = requests.post(''.join(
                             [BACKEND_BASE, "assistants/modify"]), headers=headers, data=json.dumps(_data_To_Modify_Assistant))
@@ -371,8 +393,13 @@ class SettingWindow(QWidget):
                     "assist-name": stream_name,
                     "assist-type": "code_interpreter",
                 }
+                access_token = settings.value('access_token', '')
+
+                if len(access_token) == 0:
+                    return
 
                 headers = {
+                    'Authorization': "Bearer " + access_token,
                     "content-type": "application/json"
                 }
                 response = requests.post(''.join(
@@ -459,7 +486,13 @@ class SettingWindow(QWidget):
                 payload = json.dumps({
                     "asstid": asstId
                 })
+                access_token = settings.value('access_token', '')
+
+                if len(access_token) == 0:
+                    return
+
                 headers = {
+                    'Authorization': "Bearer " + access_token,
                     "content-type": "application/json"
                 }
                 response = requests.delete(
