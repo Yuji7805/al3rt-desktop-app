@@ -59,6 +59,7 @@ def store_streams_table(stream_dict):
 
 
 def get_streams_table():
+    print("get streams from al3rt...")
     # Retrieve the JSON string from settings
     # Provide a default value of '{}'
     streams_json = {}
@@ -66,7 +67,7 @@ def get_streams_table():
     access_token = settings.value('access_token', '')
 
     if len(access_token) == 0:
-        return
+        return {}
 
     headers = {
         'Authorization': "Bearer " + access_token
@@ -75,7 +76,6 @@ def get_streams_table():
     response = requests.get(
         ''.join([BACKEND_BASE, "assistants"]), headers=headers)
     print(response)
-    print(response.text)
     if response.status_code == 200:
         assistants = response.json()
         print(assistants)
@@ -344,7 +344,8 @@ class SettingWindow(QWidget):
             self.update_table_with_prompts()
 
     def load_streams(self):
-        self._streams_data = get_streams_table()
+        print("getting streams table and setting")
+        self._streams_data = get_streams_table()        
         self.update_table_with_streams()
 
     def add_stream(self):

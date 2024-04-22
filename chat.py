@@ -229,7 +229,7 @@ class ChatWindow(QWidget):
             # show prompt description
             self.prompt_select_combo.addItem(desctiption)
 
-    def load_streams(self):
+    def load_streams(self):                        
         print("loading streams in chat")
         self.streams_list = self.setting_window.get_streams_list()
         if len(self.streams_list) == 0:
@@ -274,6 +274,7 @@ class ChatWindow(QWidget):
         self.copy_button.setDisabled(True)
 
     def enable_UI(self):
+        self.setting_window.load_streams()
         self.load_streams()
         self.load_prompts()
         self.send_request_button.setEnabled(True)
