@@ -101,6 +101,8 @@ class SystemTrayApp:
         self.mouse_thread = threading.Thread(target=self.start_mouse_listener)
         self.mouse_thread.start()
 
+        QMetaObject.invokeMethod(self.chat_window, "show", Qt.QueuedConnection)
+
     def on_floating_button_clicked(self):
         self.show_chat()
 
@@ -114,20 +116,28 @@ class SystemTrayApp:
             self.mouse_listener.stop()
 
     def show_chat(self):
-        print("clilcked......")
-        # Clear the status of all pressed keys
-        pressed_keys = keyboard._pressed_events  # Get the dictionary of pressed keys
-        for key in pressed_keys:
-            keyboard.release(key)
-        text_to_send = self.copy_selected_text()
-        self.chat_window.set_prompt_text(text_to_send)
-        # Make sure the chat window is shown even if it was closed or hidden
-        # if self.chat_window.isHidden():
-        #     self.chat_window.show()
-        # else:
-        #     self.chat_window.activateWindow()
-        QMetaObject.invokeMethod(self.chat_window, "show", Qt.QueuedConnection)
-        # invokeMethod can now safely trigger the .show() method of the chat_window in the context of the main thread.
+        try:
+            print("Hotkey pressed......")
+            # Clear the status of all pressed keys
+            pressed_keys = keyboard._pressed_events  # Get the dictionary of pressed keys
+            for key in pressed_keys:
+                keyboard.release(key)
+            text_to_send = self.copy_selected_text()
+            # Make sure the chat window is shown even if it was closed or hidden
+            if self.chat_window.isHidden():
+                self.chat_window.set_prompt_text(text_to_send)
+                self.chat_window.show()
+                self.chat_window.activateWindow()
+            else:
+                self.chat_window.hide()
+                self.chat_window.set_prompt_text(text_to_send)
+                self.chat_window.show()
+                self.chat_window.activateWindow()
+            #     pass
+            # QMetaObject.invokeMethod(self.chat_window, "show", Qt.QueuedConnection)
+            # invokeMethod can now safely trigger the .show() method of the chat_window in the context of the main thread.
+        except Exception as e:
+            print(e)
 
     def show_settings(self):
         self.setting_window.show()
