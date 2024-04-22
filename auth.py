@@ -107,11 +107,12 @@ class LoginForm(QDialog):
                 setting.settings.setValue("access_token", access_token)
                 setting.settings.sync()
 
+                # enable UI & load streams
+                self.callback()
+                
                 self.msg.setWindowTitle("Success")
                 self.msg.setText(data['message'])
                 self.msg.exec_()
-                # enable UI
-                self.callback()
 
                 self.close()
             else:

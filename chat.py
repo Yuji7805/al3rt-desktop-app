@@ -275,6 +275,7 @@ class ChatWindow(QWidget):
 
     def enable_UI(self):
         self.setting_window.load_streams()
+        self.create_openai_thread()
         self.load_streams()
         self.load_prompts()
         self.send_request_button.setEnabled(True)
