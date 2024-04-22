@@ -5,7 +5,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtCore import QUrl
 import requests
-from bs4 import BeautifulSoup
 import setting
 
 
@@ -103,10 +102,8 @@ class LoginForm(QDialog):
             response = requests.post(url, data=data)
             print(response)
             if response.status_code == 200:
-                data = response.json()
-                print(data)
-                access_token = data['access_token']
-                print(access_token)
+                data = response.json()                
+                access_token = data['access_token']                
                 setting.settings.setValue("access_token", access_token)
                 setting.settings.sync()
 
