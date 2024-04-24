@@ -5,6 +5,33 @@ from PyQt5.QtGui import QIcon
 import json
 import requests
 
+from PyQt5.QtSvg import QSvgRenderer
+from PyQt5.QtGui import QPixmap, QPainter
+from PyQt5.QtCore import QByteArray, Qt
+
+
+def svg_string_to_qicon(svg_string, size):
+    # Create a QSvgRenderer from the SVG string
+    renderer = QSvgRenderer(QByteArray(svg_string.encode()))
+
+    # Create a QPixmap to render the SVG
+    pixmap = QPixmap(size[0], size[1])
+    pixmap.fill(Qt.transparent)  # Fill the pixmap with a transparent background
+
+    # Render the SVG onto the QPixmap
+    painter = QPainter(pixmap)
+    renderer.render(painter)
+    painter.end()
+
+    # Create a QIcon from the QPixmap
+    icon = QIcon(pixmap)
+
+    return icon
+
+setting_str = """
+ <svg version="1.0" xmlns="http://www.w3.org/2000/svg"  width="64.000000pt" height="64.000000pt" viewBox="0 0 64.000000 64.000000"  preserveAspectRatio="xMidYMid meet">  <g transform="translate(0.000000,64.000000) scale(0.100000,-0.100000)" fill="#000000" stroke="none"> <path d="M200 614 c-53 -22 -55 -24 -51 -56 8 -75 9 -73 -29 -69 -19 2 -43 4 -53 5 -14 1 -25 -15 -42 -57 l-24 -57 40 -23 c21 -12 39 -29 39 -37 0 -8 -18 -25 -39 -37 l-40 -23 24 -57 c23 -56 25 -58 57 -54 75 8 73 9 69 -29 -2 -19 -4 -43 -5 -53 -1 -14 15 -25 57 -42 l57 -24 23 40 c12 21 29 39 37 39 8 0 25 -18 37 -39 l23 -40 57 24 c56 23 58 25 54 57 -8 75 -9 73 29 69 19 -2 43 -4 53 -5 14 -1 25 15 42 57 l24 57 -40 23 c-21 12 -39 29 -39 37 0 8 18 25 39 37 l40 23 -24 57 c-23 56 -25 58 -57 54 -75 -8 -73 -9 -69 29 2 19 4 43 5 53 1 14 -15 25 -57 42 l-57 24 -23 -40 c-23 -41 -52 -51 -61 -21 -4 9 -14 27 -24 38 l-17 21 -55 -23z m70 -59 c16 -27 28 -35 50 -35 22 0 34 8 50 35 24 39 28 40 65 23 29 -13 28 -12 15 -58 -8 -29 -7 -37 12 -57 12 -13 29 -21 37 -19 61 18 67 18 79 -9 17 -37 16 -41 -23 -65 -27 -16 -35 -28 -35 -50 0 -22 8 -34 35 -50 39 -24 40 -28 23 -65 -13 -29 -12 -28 -58 -15 -29 8 -37 7 -57 -12 -13 -12 -21 -29 -19 -37 18 -61 18 -67 -9 -79 -37 -17 -41 -16 -65 23 -30 49 -70 49 -100 0 -24 -39 -28 -40 -65 -23 -27 12 -27 18 -9 79 2 8 -6 25 -19 37 -20 19 -28 20 -57 12 -46 -13 -45 -14 -58 15 -17 37 -16 41 23 65 49 30 49 70 0 100 -39 24 -40 28 -23 65 12 27 18 27 79 9 8 -2 25 6 37 19 19 20 20 28 12 57 -13 46 -13 45 13 58 35 17 44 14 67 -23z"/> <path d="M263 420 c-34 -21 -63 -66 -63 -100 0 -54 65 -120 118 -120 57 0 122 64 122 120 0 56 -65 120 -122 120 -13 0 -37 -9 -55 -20z m112 -45 c50 -49 15 -135 -55 -135 -41 0 -80 39 -80 80 0 41 39 80 80 80 19 0 40 -9 55 -25z"/> </g> </svg> 
+"""
+
 BACKEND_BASE = "https://al3rt.me/app/openai/"
 # BACKEND_BASE = "http://localhost:5000/app/openai/"
 
@@ -59,6 +86,7 @@ def store_streams_table(stream_dict):
 
 
 def get_streams_table():
+    print("get streams from al3rt...")
     # Retrieve the JSON string from settings
     # Provide a default value of '{}'
     streams_json = {}
@@ -66,7 +94,7 @@ def get_streams_table():
     access_token = settings.value('access_token', '')
 
     if len(access_token) == 0:
-        return
+        return {}
 
     headers = {
         'Authorization': "Bearer " + access_token
@@ -75,7 +103,6 @@ def get_streams_table():
     response = requests.get(
         ''.join([BACKEND_BASE, "assistants"]), headers=headers)
     print(response)
-    print(response.text)
     if response.status_code == 200:
         assistants = response.json()
         print(assistants)
@@ -185,7 +212,7 @@ class SettingWindow(QWidget):
         self.add_prompt_btn.clicked.connect(self.add_prompt)
 
         self.setWindowTitle("Setting")
-        self.setWindowIcon(QIcon("./assets/setting.png"))
+        self.setWindowIcon(svg_string_to_qicon(setting_str, (64, 64)))
 
         stylesheet = """
             QWidget {
@@ -344,7 +371,8 @@ class SettingWindow(QWidget):
             self.update_table_with_prompts()
 
     def load_streams(self):
-        self._streams_data = get_streams_table()
+        print("getting streams table and setting")
+        self._streams_data = get_streams_table()        
         self.update_table_with_streams()
 
     def add_stream(self):
