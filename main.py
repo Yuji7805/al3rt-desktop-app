@@ -152,11 +152,13 @@ class SystemTrayApp:
             # Make sure the chat window is shown even if it was closed or hidden
             if self.chat_window.isHidden():
                 self.chat_window.set_prompt_text(text_to_send)
+                self.chat_window.update_prompt_input()
                 self.chat_window.show()
                 self.chat_window.activateWindow()
             else:
                 self.chat_window.hide()
                 self.chat_window.set_prompt_text(text_to_send)
+                self.chat_window.update_prompt_input()
                 self.chat_window.show()
                 self.chat_window.activateWindow()
             #     pass
