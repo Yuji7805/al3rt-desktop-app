@@ -63,7 +63,8 @@ class ChatWindow(QWidget):
         self.error_dialog = QMessageBox()
 
         self.auth = auth.LoginForm(self.enable_UI)
-        self.load_prompts()
+        self.load_prompts()        
+        
         self.load_streams()
 
         self.create_openai_thread()
@@ -312,7 +313,7 @@ class ChatWindow(QWidget):
         self.setting_window.load_streams()
         self.create_openai_thread()
         self.load_streams()
-        self.load_prompts()
+        self.load_prompts()        
         self.send_request_button.setEnabled(True)
         self.stream_combo.setEnabled(True)
         self.prompt_select_combo.setEnabled(True)
