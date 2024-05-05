@@ -143,12 +143,20 @@ class SettingWindow(QWidget):
         layout.addWidget(self.model_selection_label)
 
         self.model_selection_combo = QComboBox(self)
-        self.model_selection_combo.addItems(['GPT4'])
+        self.model_selection_combo.addItems(['GPT-4'])
+        self.model_selection_combo.addItems(['GPT-3.5'])
+        self.model_selection_combo.addItems(['AI2'])
+        self.model_selection_combo.addItems(['Claude'])
+        self.model_selection_combo.addItems(['Gemini'])
+        for index in range(self.model_selection_combo.count()):
+            if self.model_selection_combo.itemText(index) in ['AI2', 'Claude', "Gemini"]:
+                self.model_selection_combo.setItemData(index, False, Qt.ItemDataRole.UserRole - 1)  # Disable the item
+           
         layout.addWidget(self.model_selection_combo)
 
         # Manage Streams Section
-        self.manage_streams_label = QLabel("Streams")
-        layout.addWidget(self.manage_streams_label)
+        # self.manage_streams_label = QLabel("Streams")
+        # layout.addWidget(self.manage_streams_label)
 
         stream_layout = QHBoxLayout()
         self.stream_input = QLineEdit(self)
@@ -175,8 +183,8 @@ class SettingWindow(QWidget):
         layout.addWidget(self.stream_table)
 
         # Manage Prompts Section
-        self.manage_prompts_label = QLabel("Prompts")
-        layout.addWidget(self.manage_prompts_label)
+        # self.manage_prompts_label = QLabel("Prompts")
+        # layout.addWidget(self.manage_prompts_label)
 
         prompt_layout = QHBoxLayout()
         self.prompt_input = QLineEdit(self)
