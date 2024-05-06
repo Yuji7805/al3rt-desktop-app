@@ -1,3 +1,5 @@
+import os
+import tempfile
 import base64
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QPushButton, QTextEdit, QComboBox, QPlainTextEdit, QMessageBox, QLabel
 from PyQt5.QtGui import QIcon, QDesktopServices, QMovie
@@ -8,6 +10,7 @@ import json
 import pyperclip
 from PyQt5.QtCore import QSettings
 import auth
+from io import BytesIO
 import requests
 from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtGui import QPixmap, QPainter
@@ -52,7 +55,7 @@ app_str = """
 """
 
 loading_base64 = """
-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
+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
 """
 
 ORGANIZATION_NAME = 'AL3RT'
@@ -110,7 +113,7 @@ class ChatWindow(QWidget):
     def initUI(self):
         self.previous_input = ''
 
-        vlayout = QVBoxLayout()
+        self.vlayout = QVBoxLayout(self)
         hselectlayout = QHBoxLayout()
         hcopyinsertlayout = QHBoxLayout()
         self.authLayout = QHBoxLayout()
@@ -127,7 +130,7 @@ class ChatWindow(QWidget):
         self.authLayout.addWidget(self.logout_button)
         self.authLayout.addWidget(self.login_button)
 
-        vlayout.addLayout(self.authLayout)
+        self.vlayout.addLayout(self.authLayout)
 
         self.stream_combo = QComboBox()
         self.stream_combo.setFixedHeight(24)
@@ -145,14 +148,33 @@ class ChatWindow(QWidget):
         self.setting_button.clicked.connect(self.show_settings)
         hselectlayout.addWidget(self.setting_button)
 
-        vlayout.addLayout(hselectlayout)
+        self.vlayout.addLayout(hselectlayout)
 
         # input text
         self.prompt_input = QPlainTextEdit(self)
-        vlayout.addWidget(self.prompt_input)
+        self.vlayout.addWidget(self.prompt_input)
 
         self.send_request_button = QPushButton("Send Request", self)
-        vlayout.addWidget(self.send_request_button)
+        self.send_request_button.setFixedHeight(24)
+        self.send_request_button.setCheckable(True)
+
+        # Initial button style without background image
+        self.original_style = self.send_request_button.styleSheet()
+
+        # Decode the base64 string and write to a temporary file
+        gif_data = base64.b64decode(loading_base64)
+        self.temp_gif = tempfile.NamedTemporaryFile(
+            suffix=".gif", delete=False)
+        self.temp_gif.write(gif_data)
+        self.temp_gif.flush()  # Ensure all data is written to disk
+
+        # Set up the QMovie with the temporary file path
+        self.movie = QMovie(self.temp_gif.name)
+        # self.movie.start()
+        # Slot for button click event
+        # self.send_request_button.clicked.connect(self.toggle_background)
+
+        self.vlayout.addWidget(self.send_request_button)
 
         self.copy_button = QPushButton()
         self.copy_button.setFixedWidth(22)
@@ -191,13 +213,13 @@ class ChatWindow(QWidget):
         hcopyinsertlayout.addWidget(self.copy_button)
         # hcopyinsertlayout.addWidget(self.insert_button)
         hcopyinsertlayout.addStretch()
-        vlayout.addLayout(hcopyinsertlayout)
+        self.vlayout.addLayout(hcopyinsertlayout)
 
         self.answer_section = QTextEdit(self)
         self.answer_section.setReadOnly(True)
-        vlayout.addWidget(self.answer_section)
+        self.vlayout.addWidget(self.answer_section)
 
-        self.setLayout(vlayout)
+        self.setLayout(self.vlayout)
         self.setWindowTitle('Chat Window')
         self.setMinimumWidth(600)
         self.setMinimumHeight(550)
@@ -259,8 +281,39 @@ class ChatWindow(QWidget):
             QHBoxLayout {
                 spacing: 10px;
             }
-        """)        
-            
+        """)
+        self.movie.frameChanged.connect(
+            lambda: self.update_button_background(self.send_request_button))
+
+    def toggle_background(self):
+        try:
+            if self.send_request_button.isChecked():
+                try:
+                    self.movie.start()
+                except Exception as e:
+                    print("Button error: ", e)
+            else:
+                self.movie.stop()
+                self.send_request_button.setIcon(QIcon())
+                self.send_request_button.setText("Send Request")
+                self.send_request_button.setStyleSheet(self.original_style)
+        except Exception as e:
+            print("toggle error: ", e)
+
+    def update_button_background(self, button):
+        frame = self.movie.currentPixmap()
+        frame = frame.scaledToHeight(
+            int(self.send_request_button.height() / 2))
+        button.setIcon(QIcon(frame))
+        button.setIconSize(frame.size())
+        button.setText("")
+
+    def closeEvent(self, event):
+        # Clean up: Delete the temporary file when closing the widget
+        self.movie.stop()
+        self.temp_gif.close()
+        os.unlink(self.temp_gif.name)
+        event.accept()
 
     def show_err_msg(self, msg):
         # Show Error Message Dialog
@@ -373,11 +426,13 @@ class ChatWindow(QWidget):
             complete_text = f"{prompt_description}: {self.previous_input}"
             self.prompt_input.setPlainText(complete_text)
 
-    def send_request(self):        
+    def send_request(self):
         self.disable_UI()
         # Use currentText() instead of text(), as QComboBox does not have text() method
         prompt = self.prompt_input.toPlainText()
         if len(prompt) > 0:
+            # self.toggle_background()
+            self.movie.start()
             stream_name = self.stream_combo.currentText()
             asstId = self.setting_window.get_assistant_id(stream_name)
 
@@ -424,13 +479,21 @@ class ChatWindow(QWidget):
     def on_request_finished(self, result):
         self.answer_section.setText(result)
         # Re-enable button after finishing
-        self.send_request_button.setEnabled(True)        
-        self.enable_UI()    
+        self.send_request_button.setEnabled(True)
+        self.movie.stop()
+        self.send_request_button.setIcon(QIcon())
+        self.send_request_button.setText("Send Request")
+        self.send_request_button.setStyleSheet(self.original_style)
+        self.enable_UI()
 
     def on_request_error(self, exception):
         self.show_err_msg(str(exception))
         self.send_request_button.setEnabled(
-            True)  # Re-enable button after error        
+            True)  # Re-enable button after error
+        self.movie.stop()
+        self.send_request_button.setIcon(QIcon())
+        self.send_request_button.setText("Send Request")
+        self.send_request_button.setStyleSheet(self.original_style)
         self.enable_UI()
 
     def create_openai_thread(self):
