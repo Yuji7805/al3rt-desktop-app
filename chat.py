@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QPushButton, QTextEdit, QComboBox, QPlainTextEdit, QMessageBox
-from PyQt5.QtGui import QIcon, QDesktopServices
+import base64
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QApplication, QPushButton, QTextEdit, QComboBox, QPlainTextEdit, QMessageBox, QLabel
+from PyQt5.QtGui import QIcon, QDesktopServices, QMovie
 from PyQt5.QtCore import QUrl
 from setting import SettingWindow
 import requests
@@ -10,7 +11,9 @@ import auth
 import requests
 from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtGui import QPixmap, QPainter
-from PyQt5.QtCore import QByteArray, Qt
+from PyQt5.QtCore import QByteArray, Qt, QBuffer
+from PyQt5.QtCore import QObject, pyqtSignal, QThread
+
 
 def svg_string_to_qicon(svg_string, size):
     # Create a QSvgRenderer from the SVG string
@@ -18,7 +21,8 @@ def svg_string_to_qicon(svg_string, size):
 
     # Create a QPixmap to render the SVG
     pixmap = QPixmap(size[0], size[1])
-    pixmap.fill(Qt.transparent)  # Fill the pixmap with a transparent background
+    # Fill the pixmap with a transparent background
+    pixmap.fill(Qt.transparent)
 
     # Render the SVG onto the QPixmap
     painter = QPainter(pixmap)
@@ -29,6 +33,7 @@ def svg_string_to_qicon(svg_string, size):
     icon = QIcon(pixmap)
 
     return icon
+
 
 settings_str = """
   <svg version="1.0" xmlns="http://www.w3.org/2000/svg"  width="64.000000pt" height="64.000000pt" viewBox="0 0 64.000000 64.000000"  preserveAspectRatio="xMidYMid meet">  <g transform="translate(0.000000,64.000000) scale(0.100000,-0.100000)" fill="#ffffff" stroke="none"> <path d="M200 614 c-53 -22 -55 -24 -51 -56 8 -75 9 -73 -29 -69 -19 2 -43 4 -53 5 -14 1 -25 -15 -42 -57 l-24 -57 40 -23 c21 -12 39 -29 39 -37 0 -8 -18 -25 -39 -37 l-40 -23 24 -57 c23 -56 25 -58 57 -54 75 8 73 9 69 -29 -2 -19 -4 -43 -5 -53 -1 -14 15 -25 57 -42 l57 -24 23 40 c12 21 29 39 37 39 8 0 25 -18 37 -39 l23 -40 57 24 c56 23 58 25 54 57 -8 75 -9 73 29 69 19 -2 43 -4 53 -5 14 -1 25 15 42 57 l24 57 -40 23 c-21 12 -39 29 -39 37 0 8 18 25 39 37 l40 23 -24 57 c-23 56 -25 58 -57 54 -75 -8 -73 -9 -69 29 2 19 4 43 5 53 1 14 -15 25 -57 42 l-57 24 -23 -40 c-23 -41 -52 -51 -61 -21 -4 9 -14 27 -24 38 l-17 21 -55 -23z m70 -59 c16 -27 28 -35 50 -35 22 0 34 8 50 35 24 39 28 40 65 23 29 -13 28 -12 15 -58 -8 -29 -7 -37 12 -57 12 -13 29 -21 37 -19 61 18 67 18 79 -9 17 -37 16 -41 -23 -65 -27 -16 -35 -28 -35 -50 0 -22 8 -34 35 -50 39 -24 40 -28 23 -65 -13 -29 -12 -28 -58 -15 -29 8 -37 7 -57 -12 -13 -12 -21 -29 -19 -37 18 -61 18 -67 -9 -79 -37 -17 -41 -16 -65 23 -30 49 -70 49 -100 0 -24 -39 -28 -40 -65 -23 -27 12 -27 18 -9 79 2 8 -6 25 -19 37 -20 19 -28 20 -57 12 -46 -13 -45 -14 -58 15 -17 37 -16 41 23 65 49 30 49 70 0 100 -39 24 -40 28 -23 65 12 27 18 27 79 9 8 -2 25 6 37 19 19 20 20 28 12 57 -13 46 -13 45 13 58 35 17 44 14 67 -23z"/> <path d="M263 420 c-34 -21 -63 -66 -63 -100 0 -54 65 -120 118 -120 57 0 122 64 122 120 0 56 -65 120 -122 120 -13 0 -37 -9 -55 -20z m112 -45 c50 -49 15 -135 -55 -135 -41 0 -80 39 -80 80 0 41 39 80 80 80 19 0 40 -9 55 -25z"/> </g> </svg> 
@@ -45,12 +50,42 @@ insert_str = """
 app_str = """
  <svg  version="1.0" xmlns="http://www.w3.org/2000/svg"  width="291.000000pt" height="300.000000pt" viewBox="0 0 291.000000 300.000000"  preserveAspectRatio="xMidYMid meet">  <g transform="translate(0.000000,300.000000) scale(0.050000,-0.050000)" fill="#fe5b16" stroke="none"> <path d="M2177 5575 c-134 -45 -288 -176 -395 -337 l-101 -152 -145 1 c-421 1 -696 -261 -696 -664 l0 -199 -108 -61 c-420 -237 -540 -660 -292 -1033 62 -94 68 -113 43 -148 -286 -391 -176 -925 225 -1092 122 -51 132 -73 132 -282 0 -390 236 -626 649 -647 l219 -11 51 -101 c95 -187 158 -249 377 -372 169 -96 422 -64 629 78 114 78 138 80 223 15 36 -28 71 -50 78 -50 7 0 62 -22 122 -50 293 -134 692 42 852 376 l50 104 200 1 c387 2 650 259 669 655 l11 218 119 63 c410 217 503 630 241 1065 -38 64 -11 180 51 219 54 33 86 165 88 360 l1 202 -80 121 c-86 130 -226 258 -349 318 l-76 37 1 150 c2 467 -246 721 -706 721 l-173 0 -46 98 c-63 134 -246 317 -377 377 -226 104 -461 60 -748 -140 -29 -20 -44 -15 -90 28 -141 132 -457 196 -649 132z m486 -138 c166 -76 166 -72 15 -155 -67 -37 -168 -98 -225 -135 -100 -67 -107 -69 -253 -58 -82 6 -204 4 -270 -6 -66 -10 -123 -15 -127 -12 -13 12 90 177 135 217 23 21 42 49 42 63 0 13 16 30 35 37 19 6 76 34 125 61 139 77 342 72 523 -12z m942 31 c144 -49 403 -306 367 -365 -7 -11 -124 -17 -278 -15 l-267 5 -150 91 c-83 50 -169 97 -192 104 -59 19 -96 69 -71 94 100 100 416 146 591 86z m-610 -211 c13 -13 71 -47 129 -77 133 -68 158 -131 43 -106 -42 9 -196 15 -342 13 -293 -3 -298 -1 -185 79 160 113 297 149 355 91z m-1366 -276 c7 -10 -18 -66 -54 -125 -37 -58 -77 -128 -89 -156 -44 -101 -163 -212 -299 -279 -75 -37 -158 -85 -185 -105 -166 -127 -101 298 76 490 118 129 504 252 551 175z m490 0 c15 -9 -47 -52 -163 -111 -102 -52 -216 -121 -252 -152 -60 -53 -75 -61 -119 -57 -27 3 -3 63 79 201 l80 135 176 -1 c96 0 186 -7 199 -15z m1294 -1 c57 -9 141 -42 188 -73 124 -84 162 -107 466 -277 303 -171 301 -168 466 -487 49 -94 99 -184 112 -199 13 -15 66 -101 119 -191 l96 -163 0 -567 0 -568 -54 -102 c-30 -57 -66 -118 -81 -136 -15 -18 -43 -63 -63 -100 -226 -423 -330 -569 -450 -629 -56 -28 -172 -93 -257 -145 -86 -51 -171 -102 -190 -113 -19 -11 -100 -59 -178 -105 l-144 -85 -501 0 c-490 0 -676 17 -727 68 -34 33 -595 365 -658 389 -52 20 -177 150 -177 185 0 11 -17 44 -38 74 -21 30 -124 204 -230 386 l-192 333 0 561 c0 560 0 561 47 617 26 32 67 93 92 137 24 44 64 116 89 160 58 102 190 344 225 411 43 84 102 127 457 331 187 108 345 202 350 209 15 20 101 63 159 79 70 21 947 20 1074 0z m710 -110 c149 -233 139 -274 -36 -155 -64 44 -192 117 -283 163 -206 103 -196 125 51 118 l192 -6 76 -120z m361 89 c234 -62 396 -323 396 -640 0 -31 -93 -22 -120 11 -14 17 -33 30 -42 30 -89 0 -344 216 -402 340 -23 50 -64 124 -91 165 -91 137 -12 165 259 94z m151 -647 c52 -37 114 -73 137 -80 81 -25 132 -100 109 -160 -12 -30 -21 -108 -21 -173 0 -137 -20 -150 -67 -44 -42 94 -159 312 -175 325 -7 6 -27 38 -45 73 -18 35 -46 78 -64 95 -61 61 24 37 126 -36z m-3485 -175 c-62 -103 -132 -230 -156 -282 -63 -136 -74 -120 -74 105 l0 200 83 60 c46 33 91 60 102 60 10 0 42 18 70 41 100 78 91 8 -25 -184z m-314 -273 c6 -269 5 -272 -190 -602 -95 -161 -106 -164 -160 -47 -138 301 -98 538 127 742 64 58 130 119 147 134 57 57 70 17 76 -227z m4239 187 c229 -151 324 -353 292 -621 -29 -253 -135 -351 -212 -196 -64 128 -122 234 -137 246 -34 29 -61 111 -51 159 6 30 3 110 -6 177 -36 252 -6 314 114 235z m-4232 -703 c-3 -21 -7 -184 -7 -363 -1 -268 -6 -322 -28 -303 -36 29 -188 309 -188 345 0 27 116 237 159 287 12 13 21 39 21 57 0 18 11 28 25 24 14 -5 22 -26 18 -47z m4145 7 c7 -14 30 -52 52 -85 22 -33 64 -107 93 -164 l54 -103 -51 -77 c-28 -42 -70 -115 -94 -161 -70 -138 -82 -108 -82 204 0 158 -8 311 -19 338 -24 65 17 108 47 48z m309 -510 c147 -420 81 -663 -236 -868 -114 -74 -117 -73 -107 28 4 47 7 163 6 258 -3 170 51 344 120 387 11 7 20 28 20 48 0 35 133 222 158 222 7 0 24 -34 39 -75z m-4702 30 c18 -22 108 -185 203 -365 39 -74 60 -590 24 -590 -12 0 -22 8 -22 18 0 10 -20 23 -46 29 -123 31 -266 214 -333 426 -55 176 92 585 174 482z m395 -682 c14 -42 41 -92 58 -111 18 -19 32 -42 32 -51 0 -18 136 -247 175 -294 59 -71 -19 -55 -174 35 l-161 93 0 209 c0 223 22 260 70 119z m3887 -98 c-3 -80 1 -160 10 -178 13 -27 -14 -51 -131 -119 -80 -47 -162 -98 -181 -114 -54 -46 -72 25 -20 82 21 24 78 116 125 204 171 318 205 339 197 125z m-3861 -374 c41 -32 124 -81 184 -110 160 -76 207 -126 308 -327 50 -100 100 -187 111 -194 62 -38 12 -55 -128 -44 -345 26 -540 225 -566 579 -12 175 -10 177 91 96z m3839 -118 c-18 -262 -111 -401 -349 -521 -76 -38 -366 -64 -366 -33 0 5 35 65 77 135 43 69 101 168 131 220 42 75 84 113 197 178 80 46 176 105 215 131 102 69 107 63 95 -110z m-595 -191 c0 -25 -180 -327 -209 -351 -17 -14 -100 -20 -224 -17 l-197 6 68 40 c37 22 161 96 276 165 116 69 218 125 228 125 10 0 18 9 18 20 0 11 9 20 20 20 11 0 20 -3 20 -8z m-2542 -100 c56 -38 173 -107 262 -154 199 -106 199 -117 0 -121 -88 -2 -175 -4 -194 -5 -32 -2 -88 76 -185 252 -68 123 -36 130 117 28z m632 -374 c44 -12 94 -34 111 -49 17 -16 94 -62 170 -104 157 -86 168 -112 69 -164 -289 -151 -484 -130 -707 77 -99 92 -195 222 -181 244 15 26 443 22 538 -4z m900 2 c-7 -11 -50 -40 -96 -63 -46 -24 -112 -64 -146 -90 -83 -63 -117 -60 -258 25 -66 40 -140 80 -165 90 -114 43 -34 58 316 58 239 0 357 -7 349 -20z m739 2 c6 -9 -3 -29 -19 -42 -17 -14 -30 -36 -30 -50 0 -14 -54 -75 -119 -136 -207 -191 -399 -230 -663 -133 -209 76 -203 91 112 266 l200 111 254 1 c139 1 259 -7 265 -17z"/> <path d="M2520 4346 c-12 -64 -36 -165 -52 -226 -17 -60 -37 -141 -45 -180 -9 -38 -27 -90 -39 -114 -13 -24 -24 -67 -24 -96 0 -29 -10 -71 -22 -94 -12 -23 -30 -87 -39 -144 -31 -183 -52 -281 -75 -352 -57 -178 -84 -281 -84 -325 0 -26 -13 -65 -29 -86 -17 -22 -30 -69 -30 -105 -1 -36 -15 -93 -32 -127 -54 -103 -49 -226 9 -234 157 -22 206 27 242 242 12 69 33 170 48 225 l26 100 291 6 290 5 12 -125 c12 -122 23 -215 45 -350 11 -75 99 -111 219 -92 92 15 100 32 59 139 -35 91 -79 253 -109 397 -9 44 -28 112 -41 150 -13 39 -33 97 -44 130 -11 33 -28 101 -37 150 -22 125 -59 258 -91 336 -16 36 -28 85 -28 108 0 24 -9 71 -19 105 -19 59 -49 173 -102 381 -14 55 -30 141 -37 190 l-12 90 -113 6 -114 6 -23 -116z m150 -325 c17 -33 35 -116 42 -185 21 -246 121 -655 171 -699 74 -67 45 -77 -213 -77 -267 0 -280 6 -230 101 44 82 143 573 144 709 0 198 32 254 86 151z"/> <path d="M3468 4365 c6 -52 14 -389 17 -748 l5 -654 90 -8 c166 -16 165 -18 183 599 8 295 18 619 22 721 l7 185 -168 0 -168 0 12 -95z"/> <path d="M3521 2585 c-70 -57 -72 -231 -4 -287 118 -95 263 -16 263 144 0 156 -145 236 -259 143z"/> <path d="M1983 1755 c-65 -65 -15 -206 63 -177 34 13 110 14 217 2 119 -14 187 -13 245 5 62 18 81 18 87 -1 12 -34 115 -30 144 5 21 26 30 26 68 1 34 -22 104 -26 323 -20 517 16 624 16 644 4 33 -21 46 7 46 99 0 83 -2 86 -55 77 -47 -7 -477 -35 -565 -36 -16 0 -71 6 -122 15 -73 12 -98 8 -125 -19 -28 -28 -37 -29 -60 -6 -21 21 -119 28 -408 31 -210 3 -404 13 -431 23 -33 13 -56 12 -71 -3z"/> <path d="M4921 1125 c1 -37 81 -108 109 -98 43 17 37 44 -19 81 -53 34 -91 42 -90 17z"/> </g> </svg> 
 """
+
+loading_base64 = """
+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
+"""
+
 ORGANIZATION_NAME = 'AL3RT'
 APPLICATION_NAME = 'AL3RT'
 
 settings = QSettings(ORGANIZATION_NAME, APPLICATION_NAME)
 
 BACKEND_BASE = "https://al3rt.me/"
+
+
+class Worker(QObject):
+    # Signals to communicate with the main thread
+    finished = pyqtSignal(str)  # Signal to send back the response
+    error = pyqtSignal(Exception)  # Signal to send back any errors
+
+    def __init__(self, url, headers, data):
+        super().__init__()
+        self.url = url
+        self.headers = headers
+        self.data = data
+
+    def run(self):
+        try:
+            response = requests.post(
+                self.url, headers=self.headers, data=self.data)
+            if response.ok:
+                gptAnswer = response.json()["content"][0]["text"]
+                # Emit the successful response signal
+                self.finished.emit(gptAnswer)
+            else:
+                response.raise_for_status()
+        except Exception as e:
+            self.error.emit(e)  # Emit the error signal
 
 
 class ChatWindow(QWidget):
@@ -63,8 +98,8 @@ class ChatWindow(QWidget):
         self.error_dialog = QMessageBox()
 
         self.auth = auth.LoginForm(self.enable_UI)
-        self.load_prompts()        
-        
+        self.load_prompts()
+
         self.load_streams()
 
         self.create_openai_thread()
@@ -104,7 +139,8 @@ class ChatWindow(QWidget):
             self.update_prompt_input)
         hselectlayout.addWidget(self.prompt_select_combo)
 
-        self.setting_button = QPushButton(icon=svg_string_to_qicon(settings_str, (64, 64)))
+        self.setting_button = QPushButton(
+            icon=svg_string_to_qicon(settings_str, (64, 64)))
         self.setting_button.setFixedWidth(22)
         self.setting_button.clicked.connect(self.show_settings)
         hselectlayout.addWidget(self.setting_button)
@@ -223,7 +259,8 @@ class ChatWindow(QWidget):
             QHBoxLayout {
                 spacing: 10px;
             }
-        """)
+        """)        
+            
 
     def show_err_msg(self, msg):
         # Show Error Message Dialog
@@ -265,7 +302,7 @@ class ChatWindow(QWidget):
             # show prompt description
             self.prompt_select_combo.addItem(desctiption)
 
-    def load_streams(self):                        
+    def load_streams(self):
         print("loading streams in chat")
         self.streams_list = self.setting_window.get_streams_list()
         if len(self.streams_list) == 0:
@@ -313,7 +350,7 @@ class ChatWindow(QWidget):
         self.setting_window.load_streams()
         self.create_openai_thread()
         self.load_streams()
-        self.load_prompts()        
+        self.load_prompts()
         self.send_request_button.setEnabled(True)
         self.stream_combo.setEnabled(True)
         self.prompt_select_combo.setEnabled(True)
@@ -336,36 +373,65 @@ class ChatWindow(QWidget):
             complete_text = f"{prompt_description}: {self.previous_input}"
             self.prompt_input.setPlainText(complete_text)
 
-    def send_request(self):
-
+    def send_request(self):        
+        self.disable_UI()
         # Use currentText() instead of text(), as QComboBox does not have text() method
         prompt = self.prompt_input.toPlainText()
         if len(prompt) > 0:
             stream_name = self.stream_combo.currentText()
             asstId = self.setting_window.get_assistant_id(stream_name)
-            if prompt.__len__() > 0:
-                request = {
-                    "thdid": self.threadId,
-                    "asstid": asstId,
-                    "content": prompt,
-                }
 
-                print(request)
-                headers = {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                }
+            request = {
+                "thdid": self.threadId,
+                "asstid": asstId,
+                "content": prompt,
+            }
 
-                response = requests.post(''.join([BACKEND_BASE, 'openai/run']),
-                                         headers=headers, data=json.dumps(request))
-                print(response)
-                if response.ok:
-                    gptAnswer = response.json()["content"][0]["text"]
-                    self.answer_section.setText(gptAnswer)
-                else:
-                    response.raise_for_status()
-                    self.answer_section.setText(
-                        "Error: ", response.raise_for_status())
+            print(request)
+            headers = {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            }
+
+            # response = requests.post(''.join([BACKEND_BASE, 'openai/run']),
+            #                             headers=headers, data=json.dumps(request))
+            # print(response)
+            # if response.ok:
+            #     gptAnswer = response.json()["content"][0]["text"]
+            #     self.answer_section.setText(gptAnswer)
+            # else:
+            #     response.raise_for_status()
+            #     self.answer_section.setText(
+            #         "Error: ", response.raise_for_status())
+            # Create a QThread
+            self.thread = QThread()
+            # Create a worker object and move it to the new thread
+            self.worker = Worker(
+                ''.join([BACKEND_BASE, 'openai/run']), headers, json.dumps(request))
+            self.worker.moveToThread(self.thread)
+            # Connect signals and slots
+            self.thread.started.connect(self.worker.run)
+            self.worker.finished.connect(self.on_request_finished)
+            self.worker.error.connect(self.on_request_error)
+            # Stop the thread when done
+            self.worker.finished.connect(self.thread.quit)
+            # Stop the thread on error
+            self.worker.error.connect(self.thread.quit)
+
+            # Start the thread which will start the worker
+            self.thread.start()
+
+    def on_request_finished(self, result):
+        self.answer_section.setText(result)
+        # Re-enable button after finishing
+        self.send_request_button.setEnabled(True)        
+        self.enable_UI()    
+
+    def on_request_error(self, exception):
+        self.show_err_msg(str(exception))
+        self.send_request_button.setEnabled(
+            True)  # Re-enable button after error        
+        self.enable_UI()
 
     def create_openai_thread(self):
         existingthread = settings.value("thdid")
