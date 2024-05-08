@@ -350,10 +350,10 @@ class ChatWindow(QWidget):
         # Add the retrieved prompts to the combo box
         for prompt, desctiption in self.prompts_list:
             # show prompt name
-            # self.prompt_select_combo.addItem(prompt)
+            self.prompt_select_combo.addItem(prompt)
 
             # show prompt description
-            self.prompt_select_combo.addItem(desctiption)
+            # self.prompt_select_combo.addItem(desctiption)
 
     def load_streams(self):
         print("loading streams in chat")
