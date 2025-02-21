@@ -35,7 +35,6 @@ class InventorySystem:
         self.editing_doc_id = None
         
         self.create_widgets()
-        self.fetch_data_from_firestore()
         
     def create_widgets(self):
         # חיפוש
@@ -315,36 +314,6 @@ class InventorySystem:
             
         self.update_total()
 
-    def fetch_data_from_firestore(self):
-        """Fetch data from Firestore and populate the table."""
-        try:
-            products = db.collection("product").where("Archive", "==", False).stream()
-            for product in products:
-                data = product.to_dict()
-                values = [
-                    self.total_items_in_categories() + 1,
-                    data.get("Vendor", ""),
-                    data.get("SN", ""),
-                    data.get("Brand", ""),
-                    data.get("Model", ""),
-                    data.get("Screen", ""),
-                    data.get("CPU", ""),
-                    data.get("Memory", ""),
-                    data.get("Disk", ""),
-                    data.get("Video_Card", ""),
-                    data.get("Resolution", ""),
-                    data.get("Touch", ""),
-                    data.get("OS", ""),
-                    data.get("Status", ""),
-                    data.get("Price", ""),
-                    data.get("Barcode", ""),
-                    data.get("Date", "")
-                ]
-                self.category_data[self.current_category.get()].append(values[1:])
-                self.tree.insert('', tk.END, values=values)
-            self.update_total()
-        except Exception as e:
-            messagebox.showerror("שגיאה", f"שגיאה בטעינת נתונים מ-Firestore: {str(e)}")
 
     def search_products(self, event=None):
         search_term = self.search_entry.get().lower()
