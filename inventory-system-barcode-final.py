@@ -71,12 +71,6 @@ class InventorySystem:
         hsb = ttk.Scrollbar(table_frame, orient="horizontal", command=self.tree.xview)
         self.tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
         
-        # הוספת מיון בלחיצה על כותרות העמודות
-        for col in columns:
-            self.tree.heading(col, text=col, command=lambda c=col: self.sort_column(c))
-            self.tree.column(col, width=100, anchor=tk.CENTER)
-            
-
         
         self.tree.grid(row=0, column=0, sticky='nsew')
         vsb.grid(row=0, column=1, sticky='ns')
@@ -136,19 +130,7 @@ class InventorySystem:
             messagebox.showerror("שגיאה", f"שגיאה ביצירת ברקוד: {str(e)}")
             return "000000000000"
     
-    def sort_column(self, col):
-        """מיון הטבלה לפי עמודה"""
-        l = [(self.tree.set(k, col), k) for k in self.tree.get_children('')]
-        try:
-            # ניסיון למיין כמספרים
-            l.sort(key=lambda t: float(t[0]))
-        except ValueError:
-            # אם לא מצליח, ממיין כטקסט
-            l.sort()
-        
-        for index, (val, k) in enumerate(l):
-            self.tree.move(k, '', index)
-    
+ 
     def edit_item(self, event):
         """עריכת פריט בלחיצה כפולה"""
         selected = self.tree.selection()
